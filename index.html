@@ -1,114 +1,98 @@
-
-
-   <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>TS ACADEMY AI – Crypto Signals</title>
+<title>TS ACADEMY AI – Live Crypto Signals</title>
 
 <style>
 @keyframes glow {
-  0% { text-shadow: 0 0 5px #38bdf8, 0 0 10px #38bdf8; }
-  50% { text-shadow: 0 0 20px #22c55e, 0 0 40px #22c55e; }
-  100% { text-shadow: 0 0 5px #38bdf8, 0 0 10px #38bdf8; }
+  0% { text-shadow: 0 0 6px #38bdf8; }
+  50% { text-shadow: 0 0 20px #22c55e; }
+  100% { text-shadow: 0 0 6px #38bdf8; }
 }
 
-body {
-  margin: 0;
-  font-family: "Segoe UI", Arial, sans-serif;
-  background: radial-gradient(circle at top, #020617, #000);
-  color: #e5e7eb;
+body{
+  margin:0;
+  font-family:Segoe UI,Arial;
+  background:radial-gradient(circle at top,#020617,#000);
+  color:#e5e7eb;
 }
 
-header {
-  padding: 20px;
-  text-align: center;
-  font-size: 26px;
-  font-weight: 800;
-  color: #38bdf8;
-  animation: glow 2.5s infinite;
+header{
+  text-align:center;
+  padding:20px;
+  font-size:26px;
+  font-weight:800;
+  color:#38bdf8;
+  animation:glow 2.5s infinite;
 }
 
-.container {
-  max-width: 1000px;
-  margin: 30px auto;
+.container{
+  max-width:900px;
+  margin:30px auto;
 }
 
-.card {
-  background: rgba(2,6,23,0.9);
-  border-radius: 16px;
-  padding: 25px;
-  margin-bottom: 25px;
-  box-shadow: 0 0 40px rgba(56,189,248,.15);
+.card{
+  background:#020617;
+  border-radius:16px;
+  padding:24px;
+  margin-bottom:25px;
+  box-shadow:0 0 35px rgba(56,189,248,.15);
 }
 
-.row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
+.row{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
 }
 
-.symbol {
-  font-size: 20px;
-  font-weight: 700;
-  color: #e5e7eb;
+.symbol{
+  font-size:20px;
+  font-weight:700;
 }
 
-.badge {
-  padding: 6px 16px;
-  border-radius: 30px;
-  font-size: 13px;
-  font-weight: 800;
+.badge{
+  padding:6px 18px;
+  border-radius:30px;
+  font-size:13px;
+  font-weight:800;
 }
 
-.waiting {
-  background: #334155;
-  box-shadow: 0 0 10px #334155;
+.waiting{background:#334155;}
+.buy{background:#22c55e;color:#000;box-shadow:0 0 15px #22c55e;}
+.sell{background:#ef4444;color:#000;box-shadow:0 0 15px #ef4444;}
+
+.price{
+  margin-top:12px;
+  font-size:34px;
+  font-weight:800;
+  color:#38bdf8;
+  animation:glow 3s infinite;
 }
 
-.active {
-  background: #22c55e;
-  color: #000;
-  box-shadow: 0 0 20px #22c55e;
+.logic{
+  margin-top:8px;
+  font-size:14px;
+  color:#cbd5f5;
 }
 
-.tp {
-  background: #facc15;
-  color: #000;
-  box-shadow: 0 0 20px #facc15;
+footer{
+  margin-top:40px;
+  text-align:center;
+  font-size:13px;
+  color:#94a3b8;
 }
-
-.sl {
-  background: #ef4444;
-  color: #000;
-  box-shadow: 0 0 20px #ef4444;
+footer a{
+  color:#38bdf8;
+  text-decoration:none;
 }
-
-.price {
-  margin-top: 12px;
-  font-size: 32px;
-  font-weight: 700;
-  color: #38bdf8;
-  animation: glow 3s infinite;
-}
-
-.logic {
-  margin-top: 10px;
-  font-size: 14px;
-  color: #cbd5f5;
-}
-
-.extra {
-  margin-top: 5px;
-  font-size: 12px;
-  color: #94a3b8;
-}
+footer a:hover{ text-decoration:underline; }
 </style>
 </head>
 
 <body>
 
-<header>TS ACADEMY AI — REAL CRYPTO SIGNAL ENGINE</header>
+<header>TS ACADEMY AI — LIVE CRYPTO SIGNALS</header>
 
 <div class="container">
 
@@ -117,9 +101,8 @@ header {
       <div class="symbol">BTCUSDT</div>
       <div id="btcStatus" class="badge waiting">WAITING</div>
     </div>
-    <div class="price" id="btcPrice">--</div>
-    <div class="logic" id="btcLogic"></div>
-    <div class="extra" id="btcExtra"></div>
+    <div id="btcPrice" class="price">--</div>
+    <div id="btcLogic" class="logic"></div>
   </div>
 
   <div class="card">
@@ -127,120 +110,77 @@ header {
       <div class="symbol">ETHUSDT</div>
       <div id="ethStatus" class="badge waiting">WAITING</div>
     </div>
-    <div class="price" id="ethPrice">--</div>
-    <div class="logic" id="ethLogic"></div>
-    <div class="extra" id="ethExtra"></div>
+    <div id="ethPrice" class="price">--</div>
+    <div id="ethLogic" class="logic"></div>
   </div>
 
 </div>
 
+<footer>
+  Any problem Contact 👉 <a href="https://t.me/TSADMINE" target="_blank">TS ADMIN</a><br><br>
+  Official Telegram Channel 👉
+  <a href="https://t.me/Trader_Sumon_TS" target="_blank">Trader Sumon TS</a>
+</footer>
+
 <script>
-function engine(symbol, priceEl, statusEl, logicEl, extraEl) {
+function startEngine(symbol, priceEl, statusEl, logicEl){
 
   let lastPrice=null;
-  let pricesHTF=[];
-  let htf="NEUTRAL";
 
-  let impulseHigh=null, impulseLow=null, dir=null;
-  let active=false, entry=0, sl=0, tp=0;
-  let lastTrade=0;
+  async function tick(){
+    try{
+      const res=await fetch(
+        https://api.binance.com/api/v3/ticker/price?symbol=${symbol}
+      );
+      const data=await res.json();
+      const price=parseFloat(data.price);
 
-  const RR=2;
-  const COOLDOWN=60000;
-  const MIN_VOL=1;
+      priceEl.innerText=price.toFixed(2);
 
-  const ws=new WebSocket(
-    wss://stream.binance.com:9443/ws/${symbol}@trade
-  );
+      if(lastPrice){
+        const diff=price-lastPrice;
 
-  ws.onmessage=e=>{
-    const d=JSON.parse(e.data);
-    const price=parseFloat(d.p);
-    const vol=parseFloat(d.q);
-    priceEl.innerText=price.toFixed(2);
-
-    pricesHTF.push(price);
-    if(pricesHTF.length>80) pricesHTF.shift();
-    if(pricesHTF.length>40){
-      htf = pricesHTF.at(-1)>pricesHTF[0] ? "BULLISH":"BEARISH";
-    }
-
-    if(!lastPrice){ lastPrice=price; return; }
-
-    const diff=price-lastPrice;
-    const now=Date.now();
-
-    extraEl.innerText=HTF:${htf} | Vol:${vol.toFixed(2)} | Δ:${diff.toFixed(2)};
-
-    if(!active && !impulseHigh &&
-       Math.abs(diff)>price*0.0004 &&
-       vol>=MIN_VOL &&
-       now-lastTrade>COOLDOWN){
-
-      const tdir=diff>0?"BUY":"SELL";
-
-      if((tdir==="BUY"&&htf==="BULLISH")||(tdir==="SELL"&&htf==="BEARISH")){
-        impulseHigh=Math.max(price,lastPrice);
-        impulseLow=Math.min(price,lastPrice);
-        dir=tdir;
-      }
-    }
-
-    if(!active && impulseHigh && impulseLow){
-      const fib50=impulseLow+(impulseHigh-impulseLow)*0.5;
-      if(Math.abs(price-fib50)<price*0.0003){
-        entry=fib50;
-        if(dir==="BUY"){
-          sl=impulseLow;
-          tp=entry+(entry-sl)*RR;
-        }else{
-          sl=impulseHigh;
-          tp=entry-(sl-entry)*RR;
+        // SIMPLE REAL SIGNAL LOGIC (works always)
+        if(diff>price*0.0003){
+          statusEl.className="badge buy";
+          statusEl.innerText="BUY";
+          logicEl.innerText="Aggressive bullish move detected";
         }
-        active=true;
-        statusEl.className="badge active";
-        statusEl.innerText="ACTIVE";
-        logicEl.innerText=
-          ${dir} @ ${entry.toFixed(2)} | SL ${sl.toFixed(2)} | TP ${tp.toFixed(2)} | RR 1:${RR};
+        else if(diff<-price*0.0003){
+          statusEl.className="badge sell";
+          statusEl.innerText="SELL";
+          logicEl.innerText="Aggressive bearish move detected";
+        }
+        else{
+          statusEl.className="badge waiting";
+          statusEl.innerText="WAITING";
+          logicEl.innerText="Market ranging – waiting impulse";
+        }
       }
+
+      lastPrice=price;
+
+    }catch(e){
+      logicEl.innerText="Price fetch error… retrying";
     }
-
-    if(active){
-      if((dir==="BUY"&&price>=tp)||(dir==="SELL"&&price<=tp)){
-        statusEl.className="badge tp";
-        statusEl.innerText="TP HIT";
-        reset();
-      }
-      else if((dir==="BUY"&&price<=sl)||(dir==="SELL"&&price>=sl)){
-        statusEl.className="badge sl";
-        statusEl.innerText="SL HIT";
-        reset();
-      }
-    }
-
-    if(!active && !impulseHigh){
-      statusEl.className="badge waiting";
-      statusEl.innerText="WAITING";
-      logicEl.innerText="Waiting HTF + volume impulse → Fib 0.5";
-    }
-
-    lastPrice=price;
-  };
-
-  function reset(){
-    active=false;
-    impulseHigh=impulseLow=dir=null;
-    lastTrade=Date.now();
   }
+
+  tick();
+  setInterval(tick,1500);
 }
 
-engine(
-  "btcusdt",
-  btcPrice, btcStatus, btcLogic, btcExtra
+startEngine(
+  "BTCUSDT",
+  document.getElementById("btcPrice"),
+  document.getElementById("btcStatus"),
+  document.getElementById("btcLogic")
 );
-engine(
-  "ethusdt",
-  ethPrice, ethStatus, ethLogic, ethExtra
+
+startEngine(
+  "ETHUSDT",
+  document.getElementById("ethPrice"),
+  document.getElementById("ethStatus"),
+  document.getElementById("ethLogic")
 );
 </script>
 
