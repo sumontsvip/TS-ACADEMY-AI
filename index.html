@@ -1,108 +1,133 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>TS ACADEMY AI</title>
-
-<style>
-html,body{
-  margin:0;
-  width:100%;
-  height:100%;
-  background:#e9eef3;
-  font-family:Arial;
-  overflow:hidden;
-}
-
-.header{
-  position:absolute;
-  top:15px;
-  right:20px;
-  font-weight:bold;
-  letter-spacing:2px;
-}
-
-.wrapper{
-  display:flex;
-  width:100%;
-  height:100%;
-}
-
-.box{
-  flex:1;
-  display:flex;
-  flex-direction:column;
-  justify-content:center;
-  align-items:center;
-  border-right:1px solid #bbb;
-}
-
-.box:last-child{border-right:none}
-
-.symbol{
-  font-size:22px;
-  margin-bottom:10px;
-}
-
-.price{
-  font-size:28px;
-  margin-bottom:10px;
-}
-
-.status{
-  font-size:22px;
-  font-weight:bold;
-}
-
-.buy{color:green}
-.sell{color:red}
-.wait{color:orange}
-</style>
+  <meta charset="UTF-8" />
+  <title>TS ACADEMY AI</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #eef2f5;
+    }
+    header {
+      text-align: right;
+      padding: 12px 20px;
+      font-weight: bold;
+      letter-spacing: 1px;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      height: calc(100vh - 50px);
+    }
+    .box {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      border-left: 1px solid #ddd;
+    }
+    .pair {
+      font-size: 18px;
+      letter-spacing: 1px;
+    }
+    .price {
+      font-size: 26px;
+      margin: 6px 0;
+    }
+    .signal {
+      font-size: 22px;
+      font-weight: bold;
+    }
+    .SELL { color: red; }
+    .BUY { color: green; }
+    .WAITING { color: gray; }
+  </style>
 </head>
-
 <body>
 
-<div class="header">TS ACADEMY AI</div>
+<header>TS ACADEMY AI</header>
 
-<div class="wrapper">
-  <div class="box">
-    <div class="symbol">ETHUSDT</div>
+<div class="grid">
+  <div class="box" id="ETH">
+    <div class="pair">ETHUSDT</div>
     <div class="price" id="ethPrice">--</div>
-    <div class="status wait" id="ethStatus">WAITING</div>
+    <div class="signal WAITING" id="ethSignal">WAITING</div>
   </div>
-
-  <div class="box">
-    <div class="symbol">BTCUSDT</div>
+  <div class="box" id="BTC">
+    <div class="pair">BTCUSDT</div>
     <div class="price" id="btcPrice">--</div>
-    <div class="status wait" id="btcStatus">WAITING</div>
+    <div class="signal WAITING" id="btcSignal">WAITING</div>
   </div>
 </div>
 
 <script>
-function fibSignal(price, high, low){
-  let fib05 = low + (high-low)*0.5;
-  let aggressive = (high-low)/low > 0.01;
-  if(!aggressive) return "WAITING";
-  return price > fib05 ? "BUY" : "SELL";
-}
-function cls(s){return s=="BUY"?"buy":s=="SELL"?"sell":"wait"}
+const symbols = {
+  BTC: "btcusdt",
+  ETH: "ethusdt"
+};
 
-function start(symbol, priceEl, statusEl, high, low){
-  let ws = new WebSocket(
-    "wss://stream.binance.com:9443/ws/"+symbol.toLowerCase()+"@trade"
-  );
-  ws.onmessage = e =>{
-    let p = parseFloat(JSON.parse(e.data).p);
-    priceEl.innerText = p.toFixed(2);
-    let s = fibSignal(p,high,low);
-    statusEl.innerText = s;
-    statusEl.className = "status "+cls(s);
+// fetch last 30 candles
+async function getCandles(symbol) {
+  const url = https://api.binance.com/api/v3/klines?symbol=${symbol.toUpperCase()}&interval=1m&limit=30;
+  const res = await fetch(url);
+  return res.json();
+}
+
+function analyze(candles, price) {
+  const highs = candles.map(c => parseFloat(c[2]));
+  const lows  = candles.map(c => parseFloat(c[3]));
+
+  const high = Math.max(...highs);
+  const low  = Math.min(...lows);
+
+  const range = ((high - low) / low) * 100;
+
+  // aggressive move threshold (important)
+  if (range < 0.6) {
+    return "WAITING";
   }
+
+  const fib50 = low + (high - low) * 0.5;
+
+  // reaction logic (simple but real)
+  const lastClose = parseFloat(candles[candles.length - 1][4]);
+
+  if (lastClose < fib50 && price < fib50) {
+    return "SELL";
+  }
+  if (lastClose > fib50 && price > fib50) {
+    return "BUY";
+  }
+
+  return "WAITING";
 }
 
-start("ETHUSDT",ethPrice,ethStatus,2200,1800);
-start("BTCUSDT",btcPrice,btcStatus,72000,65000);
+async function update(symbolKey) {
+  const symbol = symbols[symbolKey];
+  const priceRes = await fetch(https://api.binance.com/api/v3/ticker/price?symbol=${symbol.toUpperCase()});
+  const priceData = await priceRes.json();
+  const price = parseFloat(priceData.price);
+
+  document.getElementById(symbolKey.toLowerCase() + "Price").innerText = price.toFixed(2);
+
+  const candles = await getCandles(symbol);
+  const signal = analyze(candles, price);
+
+  const el = document.getElementById(symbolKey.toLowerCase() + "Signal");
+  el.innerText = signal;
+  el.className = "signal " + signal;
+}
+
+// update every 10 seconds
+setInterval(() => {
+  update("BTC");
+  update("ETH");
+}, 10000);
+
+update("BTC");
+update("ETH");
 </script>
 
 </body>
