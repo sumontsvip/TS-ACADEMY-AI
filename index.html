@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>TS ACADEMY AI – Crypto Engine</title>
+<title>TS ACADEMY AI – Crypto Signal Engine</title>
 
 <style>
 body {
@@ -40,6 +40,7 @@ header {
 .waiting { background: #334155; }
 .active { background: #22c55e; color:#000; }
 .tp { background: #facc15; color:#000; }
+.sl { background: #ef4444; color:#000; }
 
 .price {
   font-size: 22px;
@@ -48,13 +49,14 @@ header {
 .logic {
   margin-top: 8px;
   color: #94a3b8;
+  font-size: 14px;
 }
 </style>
 </head>
 
 <body>
 
-<header>TS ACADEMY AI – Real Crypto Strategy</header>
+<header>TS ACADEMY AI – Crypto (BTC / ETH)</header>
 
 <div class="container">
 
@@ -79,19 +81,19 @@ header {
 </div>
 
 <script>
-/* ===============================
-   CORE STRATEGY ENGINE
-================================*/
-
 function createEngine(symbol, priceEl, statusEl, logicEl) {
 
   let lastPrice = null;
   let impulseHigh = null;
   let impulseLow = null;
   let direction = null;
+
   let tradeActive = false;
-  let entry = null;
-  let tp = null;
+  let entry = 0;
+  let sl = 0;
+  let tp = 0;
+
+  const RR = 2; // Risk Reward 1:2
 
   const ws = new WebSocket(
     wss://stream.binance.com:9443/ws/${symbol}@trade
@@ -110,47 +112,63 @@ function createEngine(symbol, priceEl, statusEl, logicEl) {
 
     const diff = price - lastPrice;
 
-    // -------- Aggressive impulse detect --------
-    if (Math.abs(diff) > price * 0.0008 && !tradeActive) {
+    // ===== STEP 1: Aggressive impulse =====
+    if (!tradeActive && Math.abs(diff) > price * 0.0008) {
       impulseHigh = Math.max(price, lastPrice);
       impulseLow = Math.min(price, lastPrice);
       direction = diff > 0 ? "BUY" : "SELL";
     }
 
-    // -------- Fibonacci 0.5 --------
-    if (impulseHigh && impulseLow && !tradeActive) {
+    // ===== STEP 2: Fibonacci 0.5 entry =====
+    if (!tradeActive && impulseHigh && impulseLow) {
       const fib50 = impulseLow + (impulseHigh - impulseLow) * 0.5;
 
-      if (Math.abs(price - fib50) < price * 0.0003) {
-        tradeActive = true;
+      if (Math.abs(price - fib50) < price * 0.00025) {
         entry = fib50;
-        tp = direction === "BUY"
-          ? entry + (impulseHigh - impulseLow)
-          : entry - (impulseHigh - impulseLow);
+
+        if (direction === "BUY") {
+          sl = impulseLow;
+          tp = entry + (entry - sl) * RR;
+        } else {
+          sl = impulseHigh;
+          tp = entry - (sl - entry) * RR;
+        }
+
+        tradeActive = true;
 
         statusEl.innerText = "ACTIVE";
         statusEl.className = "badge active";
 
         logicEl.innerText =
-          ${direction} @ Fib 0.5 | Entry ${entry.toFixed(2)} | TP ${tp.toFixed(2)};
+          ${direction} @ ${entry.toFixed(2)} | SL ${sl.toFixed(2)} | TP ${tp.toFixed(2)} | RR 1:${RR};
       }
     }
 
-    // -------- TP Hit --------
+    // ===== STEP 3: Trade management =====
     if (tradeActive) {
+
+      // TP HIT
       if (
         (direction === "BUY" && price >= tp) ||
         (direction === "SELL" && price <= tp)
       ) {
         statusEl.innerText = "TP HIT";
         statusEl.className = "badge tp";
-        logicEl.innerText = "Trade completed. Waiting new setup.";
+        logicEl.innerText = "TP achieved. Waiting new setup.";
 
-        // reset
-        tradeActive = false;
-        impulseHigh = null;
-        impulseLow = null;
-        direction = null;
+        reset();
+      }
+
+      // SL HIT
+      else if (
+        (direction === "BUY" && price <= sl) ||
+        (direction === "SELL" && price >= sl)
+      ) {
+        statusEl.innerText = "SL HIT";
+        statusEl.className = "badge sl";
+        logicEl.innerText = "SL hit. Setup invalidated.";
+
+        reset();
       }
     }
 
@@ -162,6 +180,13 @@ function createEngine(symbol, priceEl, statusEl, logicEl) {
 
     lastPrice = price;
   };
+
+function reset() {
+    tradeActive = false;
+    impulseHigh = null;
+    impulseLow = null;
+    direction = null;
+  }
 }
 
 // INIT
