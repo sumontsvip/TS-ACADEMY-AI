@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>TS ACADEMY AI – Crypto Signal Engine</title>
+<title>TS ACADEMY AI – Crypto Pro Engine</title>
 
 <style>
 body {
@@ -41,22 +41,23 @@ header {
 .active { background: #22c55e; color:#000; }
 .tp { background: #facc15; color:#000; }
 .sl { background: #ef4444; color:#000; }
+.htf { background:#0ea5e9; color:#000; }
 
 .price {
   font-size: 22px;
   margin-top: 10px;
 }
 .logic {
-  margin-top: 8px;
+  margin-top: 6px;
+  font-size: 13px;
   color: #94a3b8;
-  font-size: 14px;
 }
 </style>
 </head>
 
 <body>
 
-<header>TS ACADEMY AI – Crypto (BTC / ETH)</header>
+<header>TS ACADEMY AI – Crypto (HTF Filter ON)</header>
 
 <div class="container">
 
@@ -67,6 +68,7 @@ header {
     </div>
     <div class="price" id="btcPrice">Price: --</div>
     <div class="logic" id="btcLogic"></div>
+    <div class="logic" id="btcHTF"></div>
   </div>
 
   <div class="card">
@@ -76,34 +78,45 @@ header {
     </div>
     <div class="price" id="ethPrice">Price: --</div>
     <div class="logic" id="ethLogic"></div>
+    <div class="logic" id="ethHTF"></div>
   </div>
 
 </div>
 
 <script>
-function createEngine(symbol, priceEl, statusEl, logicEl) {
+function createEngine(symbol, priceEl, statusEl, logicEl, htfEl) {
 
   let lastPrice = null;
+  let pricesHTF = []; // pseudo 15m bias
+  let htfBias = "NEUTRAL";
+
   let impulseHigh = null;
   let impulseLow = null;
   let direction = null;
 
   let tradeActive = false;
-  let entry = 0;
-  let sl = 0;
-  let tp = 0;
-
-  const RR = 2; // Risk Reward 1:2
+  let entry = 0, sl = 0, tp = 0;
+  const RR = 2;
 
   const ws = new WebSocket(
     wss://stream.binance.com:9443/ws/${symbol}@trade
   );
 
-  ws.onmessage = (event) => {
-    const data = JSON.parse(event.data);
-    const price = parseFloat(data.p);
-
+  ws.onmessage = (e) => {
+    const price = parseFloat(JSON.parse(e.data).p);
     priceEl.innerText = "Price: " + price.toFixed(2);
+
+    // ===== HTF LOGIC (rolling bias) =====
+    pricesHTF.push(price);
+    if (pricesHTF.length > 120) pricesHTF.shift(); // ~15m feel
+
+    if (pricesHTF.length >= 60) {
+      const first = pricesHTF[0];
+      const last = pricesHTF[pricesHTF.length - 1];
+      htfBias = last > first ? "BULLISH" : "BEARISH";
+    }
+
+    htfEl.innerText = "HTF Bias: " + htfBias;
 
     if (!lastPrice) {
       lastPrice = price;
@@ -112,14 +125,22 @@ function createEngine(symbol, priceEl, statusEl, logicEl) {
 
     const diff = price - lastPrice;
 
-    // ===== STEP 1: Aggressive impulse =====
+    // ===== Aggressive impulse =====
     if (!tradeActive && Math.abs(diff) > price * 0.0008) {
-      impulseHigh = Math.max(price, lastPrice);
-      impulseLow = Math.min(price, lastPrice);
-      direction = diff > 0 ? "BUY" : "SELL";
+      const tempDir = diff > 0 ? "BUY" : "SELL";
+
+      // HTF FILTER
+      if (
+        (tempDir === "BUY" && htfBias === "BULLISH") ||
+        (tempDir === "SELL" && htfBias === "BEARISH")
+      ) {
+        impulseHigh = Math.max(price, lastPrice);
+        impulseLow = Math.min(price, lastPrice);
+        direction = tempDir;
+      }
     }
 
-    // ===== STEP 2: Fibonacci 0.5 entry =====
+    // ===== Fib 0.5 Entry =====
     if (!tradeActive && impulseHigh && impulseLow) {
       const fib50 = impulseLow + (impulseHigh - impulseLow) * 0.5;
 
@@ -135,7 +156,6 @@ function createEngine(symbol, priceEl, statusEl, logicEl) {
         }
 
         tradeActive = true;
-
         statusEl.innerText = "ACTIVE";
         statusEl.className = "badge active";
 
@@ -144,30 +164,24 @@ function createEngine(symbol, priceEl, statusEl, logicEl) {
       }
     }
 
-    // ===== STEP 3: Trade management =====
+    // ===== Trade Management =====
     if (tradeActive) {
-
-      // TP HIT
       if (
         (direction === "BUY" && price >= tp) ||
         (direction === "SELL" && price <= tp)
       ) {
         statusEl.innerText = "TP HIT";
         statusEl.className = "badge tp";
-        logicEl.innerText = "TP achieved. Waiting new setup.";
-
+        logicEl.innerText = "TP hit. Waiting new setup.";
         reset();
       }
-
-      // SL HIT
       else if (
         (direction === "BUY" && price <= sl) ||
         (direction === "SELL" && price >= sl)
       ) {
         statusEl.innerText = "SL HIT";
         statusEl.className = "badge sl";
-        logicEl.innerText = "SL hit. Setup invalidated.";
-
+        logicEl.innerText = "SL hit. Setup failed.";
         reset();
       }
     }
@@ -175,17 +189,16 @@ function createEngine(symbol, priceEl, statusEl, logicEl) {
     if (!tradeActive) {
       statusEl.innerText = "WAITING";
       statusEl.className = "badge waiting";
-      logicEl.innerText = "Waiting aggressive move → Fib 0.5";
+      if (!logicEl.innerText)
+        logicEl.innerText = "Waiting HTF aligned impulse → Fib 0.5";
     }
 
     lastPrice = price;
   };
 
-function reset() {
+  function reset() {
     tradeActive = false;
-    impulseHigh = null;
-    impulseLow = null;
-    direction = null;
+    impulseHigh = impulseLow = direction = null;
   }
 }
 
@@ -194,14 +207,16 @@ createEngine(
   "btcusdt",
   document.getElementById("btcPrice"),
   document.getElementById("btcStatus"),
-  document.getElementById("btcLogic")
+  document.getElementById("btcLogic"),
+  document.getElementById("btcHTF")
 );
 
 createEngine(
   "ethusdt",
   document.getElementById("ethPrice"),
   document.getElementById("ethStatus"),
-  document.getElementById("ethLogic")
+  document.getElementById("ethLogic"),
+  document.getElementById("ethHTF")
 );
 </script>
 
