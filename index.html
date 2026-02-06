@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -8,54 +7,48 @@
 
 <style>
 body {
-  background: radial-gradient(circle at top, #0a0f1f, #000);
-  font-family: Arial, sans-serif;
-  color: #fff;
-  margin: 0;
+  background:#020617;
+  font-family:Arial, sans-serif;
+  color:#fff;
 }
 h1 {
-  text-align: center;
-  color: #00f7ff;
-  text-shadow: 0 0 15px #00f7ff;
+  text-align:center;
+  color:#00eaff;
+  text-shadow:0 0 20px #00eaff;
 }
-.container {
-  max-width: 900px;
-  margin: auto;
-  padding: 15px;
-}
+.container { max-width:900px; margin:auto; padding:15px; }
 .card {
-  background: #050b18;
-  border-radius: 12px;
-  padding: 15px;
-  margin-bottom: 15px;
-  box-shadow: 0 0 20px rgba(0,255,255,.15);
+  background:#050b18;
+  padding:15px;
+  border-radius:12px;
+  margin-bottom:15px;
+  box-shadow:0 0 25px rgba(0,255,255,.2);
 }
-.asset {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
+.row {
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
 }
 .price {
-  font-size: 22px;
-  color: #00ff9c;
-  text-shadow: 0 0 10px #00ff9c;
+  font-size:22px;
+  color:#00ff9c;
+  text-shadow:0 0 10px #00ff9c;
 }
 .status {
-  font-weight: bold;
-  padding: 6px 12px;
-  border-radius: 6px;
-  text-shadow: 0 0 10px;
+  padding:6px 14px;
+  border-radius:6px;
+  font-weight:bold;
+  text-shadow:0 0 10px;
 }
-.waiting { background:#333; color:#aaa; }
+.wait { background:#222; color:#aaa; }
 .buy { background:#003300; color:#00ff00; }
 .sell { background:#330000; color:#ff3b3b; }
-
 .footer {
   text-align:center;
   font-size:14px;
   opacity:.8;
 }
-a { color:#00f7ff; text-decoration:none; }
+a { color:#00eaff; text-decoration:none; }
 </style>
 </head>
 
@@ -64,91 +57,134 @@ a { color:#00f7ff; text-decoration:none; }
 
 <div class="container">
 
+<!-- CRYPTO -->
 <div class="card">
-  <div class="asset">
-    <div>BTC / USDT</div>
+  <div class="row">
+    <b>BTC / USDT</b>
     <div class="price" id="btcPrice">--</div>
-    <div class="status waiting" id="btcSignal">WAITING</div>
+    <div class="status wait" id="btcSignal">WAITING</div>
   </div>
 </div>
 
 <div class="card">
-  <div class="asset">
-    <div>ETH / USDT</div>
+  <div class="row">
+    <b>ETH / USDT</b>
     <div class="price" id="ethPrice">--</div>
-    <div class="status waiting" id="ethSignal">WAITING</div>
+    <div class="status wait" id="ethSignal">WAITING</div>
+  </div>
+</div>
+
+<!-- FOREX -->
+<div class="card">
+  <div class="row">
+    <b>EUR / USD</b>
+    <div class="price" id="eurPrice">--</div>
+    <div class="status wait" id="eurSignal">WAITING</div>
   </div>
 </div>
 
 <div class="card">
-  <b>FOREX (UI READY)</b><br>
-  GOLD • SILVER • EURUSD<br>
-  <span style="color:#ff9800">Waiting for API</span>
+  <div class="row">
+    <b>GOLD (XAUUSD)</b>
+    <div class="price" id="goldPrice">--</div>
+    <div class="status wait" id="goldSignal">WAITING</div>
+  </div>
 </div>
 
 <div class="footer">
-  Any problem Contact 👉 <a href="https://t.me/TSADMINE">TS ADMIN</a><br>
-  Official Channel 👉 <a href="https://t.me/Trader_Sumon_TS">Trader Sumon TS</a>
+Any problem 👉 <a href="https://t.me/TSADMINE">TS ADMIN</a><br>
+Official Channel 👉 <a href="https://t.me/Trader_Sumon_TS">Trader Sumon TS</a>
 </div>
 
 </div>
 
 <script>
-function engine(symbol, priceEl, signalEl) {
-  let last = null;
-  let high = null;
-  let low = null;
-  let cooldown = false;
+/* ================== CRYPTO ENGINE ================== */
+function cryptoEngine(symbol, priceEl, signalEl) {
+  let last=null, high=null, low=null, cooldown=false;
 
   const ws = new WebSocket(
     wss://stream.binance.com:9443/ws/${symbol}@trade
   );
 
   ws.onmessage = e => {
-    const data = JSON.parse(e.data);
-    const price = parseFloat(data.p);
-    priceEl.innerText = price.toFixed(2);
+    const p = parseFloat(JSON.parse(e.data).p);
+    priceEl.innerText = p.toFixed(2);
 
-    if (!last) {
-      last = price;
-      high = price;
-      low = price;
-      return;
-    }
+    if(!last){ last=p; high=p; low=p; return; }
+    high=Math.max(high,p); low=Math.min(low,p);
 
-    high = Math.max(high, price);
-    low = Math.min(low, price);
-
-    const diff = price - last;
-    const aggressive = Math.abs(diff) > price * 0.0004;
-
-    if (aggressive && !cooldown) {
-      const fib50 = (high + low) / 2;
-
-      if (price > fib50) {
-        signalEl.innerText = "BUY";
-        signalEl.className = "status buy";
+    const aggressive=Math.abs(p-last)>p*0.0004;
+    if(aggressive && !cooldown){
+      const fib50=(high+low)/2;
+      if(p>fib50){
+        signalEl.innerText="BUY";
+        signalEl.className="status buy";
       } else {
-        signalEl.innerText = "SELL";
-        signalEl.className = "status sell";
+        signalEl.innerText="SELL";
+        signalEl.className="status sell";
       }
-
-      cooldown = true;
-      setTimeout(() => {
-        signalEl.innerText = "WAITING";
-        signalEl.className = "status waiting";
-        high = price;
-        low = price;
-        cooldown = false;
-      }, 120000);
+      cooldown=true;
+      setTimeout(()=>{
+        signalEl.innerText="WAITING";
+        signalEl.className="status wait";
+        high=p; low=p; cooldown=false;
+      },120000);
     }
-
-    last = price;
+    last=p;
   };
 }
 
-engine("btcusdt", btcPrice, btcSignal);
-engine("ethusdt", ethPrice, ethSignal);
+/* ================== FOREX ENGINE ================== */
+const API_KEY="6cb638d89b1b472b9865061fd1cd9f97";
+
+function forexEngine(symbol, priceEl, signalEl){
+  let last=null;
+
+  async function fetchPrice(){
+    try{
+      const res=await fetch(
+        https://api.twelvedata.com/time_series?symbol=${symbol}&interval=1min&apikey=${API_KEY}&outputsize=3
+      );
+      const data=await res.json();
+      if(!data.values) return;
+
+      const close=parseFloat(data.values[0].close);
+      const open=parseFloat(data.values[0].open);
+
+      priceEl.innerText=close.toFixed(5);
+
+      if(!last){ last=close; return; }
+
+      const aggressive=Math.abs(close-open)>open*0.0006;
+
+      if(aggressive){
+        if(close>open){
+          signalEl.innerText="BUY";
+          signalEl.className="status buy";
+        } else {
+          signalEl.innerText="SELL";
+          signalEl.className="status sell";
+        }
+      } else {
+        signalEl.innerText="WAITING";
+        signalEl.className="status wait";
+      }
+
+      last=close;
+    }catch(e){}
+  }
+  fetchPrice();
+  setInterval(fetchPrice,60000);
+}
+
+/* START */
+cryptoEngine("btcusdt", btcPrice, btcSignal);
+cryptoEngine("ethusdt", ethPrice, ethSignal);
+
+forexEngine("EUR/USD", eurPrice, eurSignal);
+forexEngine("XAU/USD", goldPrice, goldSignal);
 </script>
+
 </body>
 </html>
