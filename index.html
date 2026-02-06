@@ -2,43 +2,59 @@
 <html>
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>TS ACADEMY AI</title>
 
 <style>
-body{
+html,body{
   margin:0;
+  width:100%;
+  height:100%;
   background:#e9eef3;
   font-family:Arial;
+  overflow:hidden;
 }
+
 .header{
-  position:fixed;
+  position:absolute;
+  top:15px;
   right:20px;
-  top:20px;
   font-weight:bold;
   letter-spacing:2px;
 }
-.container{
-  display:grid;
-  grid-template-columns: 1fr 1fr;
-  height:100vh;
+
+.wrapper{
+  display:flex;
+  width:100%;
+  height:100%;
 }
-.panel{
-  padding:40px;
-  border-right:1px solid #ccc;
+
+.box{
+  flex:1;
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  align-items:center;
+  border-right:1px solid #bbb;
 }
-.panel:last-child{border-right:none}
+
+.box:last-child{border-right:none}
+
 .symbol{
+  font-size:22px;
+  margin-bottom:10px;
+}
+
+.price{
+  font-size:28px;
+  margin-bottom:10px;
+}
+
+.status{
   font-size:22px;
   font-weight:bold;
 }
-.price{
-  font-size:26px;
-  margin:20px 0;
-}
-.status{
-  font-size:20px;
-  font-weight:bold;
-}
+
 .buy{color:green}
 .sell{color:red}
 .wait{color:orange}
@@ -49,20 +65,18 @@ body{
 
 <div class="header">TS ACADEMY AI</div>
 
-<div class="container">
-
-  <div class="panel">
+<div class="wrapper">
+  <div class="box">
     <div class="symbol">ETHUSDT</div>
     <div class="price" id="ethPrice">--</div>
     <div class="status wait" id="ethStatus">WAITING</div>
   </div>
 
-  <div class="panel">
+  <div class="box">
     <div class="symbol">BTCUSDT</div>
     <div class="price" id="btcPrice">--</div>
     <div class="status wait" id="btcStatus">WAITING</div>
   </div>
-
 </div>
 
 <script>
@@ -74,11 +88,11 @@ function fibSignal(price, high, low){
 }
 function cls(s){return s=="BUY"?"buy":s=="SELL"?"sell":"wait"}
 
-function ws(symbol, priceEl, statusEl, high, low){
-  let socket = new WebSocket(
+function start(symbol, priceEl, statusEl, high, low){
+  let ws = new WebSocket(
     "wss://stream.binance.com:9443/ws/"+symbol.toLowerCase()+"@trade"
   );
-  socket.onmessage = e =>{
+  ws.onmessage = e =>{
     let p = parseFloat(JSON.parse(e.data).p);
     priceEl.innerText = p.toFixed(2);
     let s = fibSignal(p,high,low);
@@ -87,8 +101,8 @@ function ws(symbol, priceEl, statusEl, high, low){
   }
 }
 
-ws("ETHUSDT",ethPrice,ethStatus,4000,3500);
-ws("BTCUSDT",btcPrice,btcStatus,70000,65000);
+start("ETHUSDT",ethPrice,ethStatus,2200,1800);
+start("BTCUSDT",btcPrice,btcStatus,72000,65000);
 </script>
 
 </body>
