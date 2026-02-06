@@ -1,74 +1,114 @@
 
-  <!DOCTYPE html>
+
+   <!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>TS ACADEMY AI – Crypto Final Engine</title>
+<title>TS ACADEMY AI – Crypto Signals</title>
 
 <style>
+@keyframes glow {
+  0% { text-shadow: 0 0 5px #38bdf8, 0 0 10px #38bdf8; }
+  50% { text-shadow: 0 0 20px #22c55e, 0 0 40px #22c55e; }
+  100% { text-shadow: 0 0 5px #38bdf8, 0 0 10px #38bdf8; }
+}
+
 body {
   margin: 0;
   font-family: "Segoe UI", Arial, sans-serif;
   background: radial-gradient(circle at top, #020617, #000);
   color: #e5e7eb;
 }
+
 header {
-  padding: 18px 30px;
-  background: linear-gradient(90deg,#020617,#020617);
-  font-size: 22px;
-  font-weight: 700;
+  padding: 20px;
+  text-align: center;
+  font-size: 26px;
+  font-weight: 800;
   color: #38bdf8;
-  letter-spacing: 1px;
+  animation: glow 2.5s infinite;
 }
+
 .container {
-  max-width: 1100px;
+  max-width: 1000px;
   margin: 30px auto;
 }
+
 .card {
-  background: #020617;
-  padding: 22px;
-  border-radius: 14px;
+  background: rgba(2,6,23,0.9);
+  border-radius: 16px;
+  padding: 25px;
   margin-bottom: 25px;
-  box-shadow: 0 0 25px rgba(0,0,0,.6);
+  box-shadow: 0 0 40px rgba(56,189,248,.15);
 }
+
 .row {
   display: flex;
   justify-content: space-between;
   align-items: center;
 }
+
 .symbol {
-  font-size: 18px;
-  font-weight: 600;
-}
-.badge {
-  padding: 6px 14px;
-  border-radius: 20px;
-  font-size: 13px;
+  font-size: 20px;
   font-weight: 700;
+  color: #e5e7eb;
 }
-.waiting { background: #334155; }
-.active { background: #22c55e; color:#000; }
-.tp { background: #facc15; color:#000; }
-.sl { background: #ef4444; color:#000; }
+
+.badge {
+  padding: 6px 16px;
+  border-radius: 30px;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.waiting {
+  background: #334155;
+  box-shadow: 0 0 10px #334155;
+}
+
+.active {
+  background: #22c55e;
+  color: #000;
+  box-shadow: 0 0 20px #22c55e;
+}
+
+.tp {
+  background: #facc15;
+  color: #000;
+  box-shadow: 0 0 20px #facc15;
+}
+
+.sl {
+  background: #ef4444;
+  color: #000;
+  box-shadow: 0 0 20px #ef4444;
+}
 
 .price {
-  font-size: 26px;
+  margin-top: 12px;
+  font-size: 32px;
+  font-weight: 700;
+  color: #38bdf8;
+  animation: glow 3s infinite;
+}
+
+.logic {
   margin-top: 10px;
+  font-size: 14px;
+  color: #cbd5f5;
 }
-.logic, .extra {
-  margin-top: 6px;
-  font-size: 13px;
-  color: #94a3b8;
-}
+
 .extra {
-  color: #60a5fa;
+  margin-top: 5px;
+  font-size: 12px;
+  color: #94a3b8;
 }
 </style>
 </head>
 
 <body>
 
-<header>TS ACADEMY AI — Crypto Signal Engine (PRO)</header>
+<header>TS ACADEMY AI — REAL CRYPTO SIGNAL ENGINE</header>
 
 <div class="container">
 
@@ -95,146 +135,112 @@ header {
 </div>
 
 <script>
-function createEngine(symbol, priceEl, statusEl, logicEl, extraEl) {
+function engine(symbol, priceEl, statusEl, logicEl, extraEl) {
 
-  let lastPrice = null;
-  let pricesHTF = [];
-  let htfBias = "NEUTRAL";
+  let lastPrice=null;
+  let pricesHTF=[];
+  let htf="NEUTRAL";
 
-  let impulseHigh=null, impulseLow=null, direction=null;
-  let tradeActive=false, entry=0, sl=0, tp=0;
-  let lastTradeTime=0;
+  let impulseHigh=null, impulseLow=null, dir=null;
+  let active=false, entry=0, sl=0, tp=0;
+  let lastTrade=0;
 
-  const RR = 2;
-  const COOLDOWN = 120000; // 2 min
-  const MIN_VOLUME = 5; // filter fake impulse
+  const RR=2;
+  const COOLDOWN=60000;
+  const MIN_VOL=1;
 
-  const ws = new WebSocket(
+  const ws=new WebSocket(
     wss://stream.binance.com:9443/ws/${symbol}@trade
   );
 
-  ws.onmessage = (e) => {
-    const d = JSON.parse(e.data);
-    const price = parseFloat(d.p);
-    const volume = parseFloat(d.q);
+  ws.onmessage=e=>{
+    const d=JSON.parse(e.data);
+    const price=parseFloat(d.p);
+    const vol=parseFloat(d.q);
+    priceEl.innerText=price.toFixed(2);
 
-    priceEl.innerText = price.toFixed(2);
-
-    // ===== HTF bias =====
     pricesHTF.push(price);
-    if (pricesHTF.length > 120) pricesHTF.shift();
-    if (pricesHTF.length >= 60) {
-      htfBias =
-        pricesHTF[pricesHTF.length-1] > pricesHTF[0]
-        ? "BULLISH"
-        : "BEARISH";
+    if(pricesHTF.length>80) pricesHTF.shift();
+    if(pricesHTF.length>40){
+      htf = pricesHTF.at(-1)>pricesHTF[0] ? "BULLISH":"BEARISH";
     }
 
-    extraEl.innerText = HTF: ${htfBias} | Vol: ${volume.toFixed(2)};
+    if(!lastPrice){ lastPrice=price; return; }
 
-    if (!lastPrice) {
-      lastPrice = price;
-      return;
-    }
+    const diff=price-lastPrice;
+    const now=Date.now();
 
-    const diff = price - lastPrice;
-    const now = Date.now();
+    extraEl.innerText=HTF:${htf} | Vol:${vol.toFixed(2)} | Δ:${diff.toFixed(2)};
 
-    // ===== Aggressive + volume + cooldown =====
-    if (
-      !tradeActive &&
-      impulseHigh === null &&
-      Math.abs(diff) > price * 0.0008 &&
-      volume >= MIN_VOLUME &&
-      now - lastTradeTime > COOLDOWN
-    ) {
-      const tempDir = diff > 0 ? "BUY" : "SELL";
+    if(!active && !impulseHigh &&
+       Math.abs(diff)>price*0.0004 &&
+       vol>=MIN_VOL &&
+       now-lastTrade>COOLDOWN){
 
-      if (
-        (tempDir === "BUY" && htfBias === "BULLISH") ||
-        (tempDir === "SELL" && htfBias === "BEARISH")
-      ) {
-        impulseHigh = Math.max(price, lastPrice);
-        impulseLow = Math.min(price, lastPrice);
-        direction = tempDir;
+      const tdir=diff>0?"BUY":"SELL";
+
+      if((tdir==="BUY"&&htf==="BULLISH")||(tdir==="SELL"&&htf==="BEARISH")){
+        impulseHigh=Math.max(price,lastPrice);
+        impulseLow=Math.min(price,lastPrice);
+        dir=tdir;
       }
     }
 
-    // ===== Fib 0.5 =====
-    if (!tradeActive && impulseHigh && impulseLow) {
-      const fib50 = impulseLow + (impulseHigh - impulseLow) * 0.5;
-
-      if (Math.abs(price - fib50) < price * 0.00025) {
-        entry = fib50;
-
-        if (direction === "BUY") {
-          sl = impulseLow;
-          tp = entry + (entry - sl) * RR;
-        } else {
-          sl = impulseHigh;
-          tp = entry - (sl - entry) * RR;
+    if(!active && impulseHigh && impulseLow){
+      const fib50=impulseLow+(impulseHigh-impulseLow)*0.5;
+      if(Math.abs(price-fib50)<price*0.0003){
+        entry=fib50;
+        if(dir==="BUY"){
+          sl=impulseLow;
+          tp=entry+(entry-sl)*RR;
+        }else{
+          sl=impulseHigh;
+          tp=entry-(sl-entry)*RR;
         }
-
-        tradeActive = true;
-        statusEl.className = "badge active";
-        statusEl.innerText = "ACTIVE";
-
-      logicEl.innerText =
-          ${direction} @ ${entry.toFixed(2)} | SL ${sl.toFixed(2)} | TP ${tp.toFixed(2)} | RR 1:${RR};
+        active=true;
+        statusEl.className="badge active";
+        statusEl.innerText="ACTIVE";
+        logicEl.innerText=
+          ${dir} @ ${entry.toFixed(2)} | SL ${sl.toFixed(2)} | TP ${tp.toFixed(2)} | RR 1:${RR};
       }
     }
 
-    // ===== Manage trade =====
-    if (tradeActive) {
-      if (
-        (direction==="BUY" && price>=tp) ||
-        (direction==="SELL" && price<=tp)
-      ) {
+    if(active){
+      if((dir==="BUY"&&price>=tp)||(dir==="SELL"&&price<=tp)){
         statusEl.className="badge tp";
         statusEl.innerText="TP HIT";
         reset();
       }
-      else if (
-        (direction==="BUY" && price<=sl) ||
-        (direction==="SELL" && price>=sl)
-      ) {
+      else if((dir==="BUY"&&price<=sl)||(dir==="SELL"&&price>=sl)){
         statusEl.className="badge sl";
         statusEl.innerText="SL HIT";
         reset();
       }
     }
 
-    if (!tradeActive && !impulseHigh) {
+    if(!active && !impulseHigh){
       statusEl.className="badge waiting";
       statusEl.innerText="WAITING";
-      logicEl.innerText="Waiting HTF + Volume impulse → Fib 0.5";
+      logicEl.innerText="Waiting HTF + volume impulse → Fib 0.5";
     }
 
-    lastPrice = price;
+    lastPrice=price;
   };
 
-  function reset() {
-    tradeActive=false;
-    impulseHigh=impulseLow=direction=null;
-    lastTradeTime=Date.now();
+  function reset(){
+    active=false;
+    impulseHigh=impulseLow=dir=null;
+    lastTrade=Date.now();
   }
 }
 
-// INIT
-createEngine(
+engine(
   "btcusdt",
-  document.getElementById("btcPrice"),
-  document.getElementById("btcStatus"),
-  document.getElementById("btcLogic"),
-  document.getElementById("btcExtra")
+  btcPrice, btcStatus, btcLogic, btcExtra
 );
-
-createEngine(
+engine(
   "ethusdt",
-  document.getElementById("ethPrice"),
-  document.getElementById("ethStatus"),
-  document.getElementById("ethLogic"),
-  document.getElementById("ethExtra")
+  ethPrice, ethStatus, ethLogic, ethExtra
 );
 </script>
 
