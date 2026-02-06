@@ -1,3 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>TS ACADEMY AI</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #f2f4f8;
+    }
+
+    header {
+      background: #0f172a;
+      color: #fff;
+      padding: 14px;
+      text-align: center;
+      font-weight: bold;
+      font-size: 18px;
+      letter-spacing: 1px;
+    }
+
+    .tabs {
+      display: flex;
+      background: #fff;
+      border-bottom: 2px solid #e5e7eb;
+    }
+
+    .tab {
+      flex: 1;
+      padding: 12px;
+      text-align: center;
+      cursor: pointer;
+      font-weight: bold;
+      color: #64748b;
+    }
+
+    .tab.active {
+      color: #2563eb;
+      border-bottom: 3px solid #2563eb;
+    }
+
+    .container {
+      padding: 12px;
+    }
+
+    .card {
+      background: #eaf7ef;
+      border-radius: 12px;
+      padding: 14px;
+      margin-bottom: 14px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+    }
+
+    .card h3 {
+      margin: 0;
+      font-size: 16px;
+      color: #065f46;
+    }
+
+    .price {
+      font-size: 14px;
+      margin: 6px 0;
+    }
+
+    .badges {
+      display: flex;
+      gap: 10px;
+      margin: 8px 0;
+    }
+
+    .badge {
+      padding: 6px 12px;
+      border-radius: 20px;
+      font-size: 12px;
+      color: #fff;
+    }
+
+    .green { background: #16a34a; }
+    .blue { background: #4f46e5; }
+
+    .targets {
+      margin-top: 10px;
+      font-size: 14px;
+    }
+
+    .target {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 6px;
+    }
+
+    .sl {
+      margin-top: 12px;
+      background: #ef4444;
+      color: #fff;
+      padding: 10px;
+      text-align: center;
+      border-radius: 10px;
+      font-weight: bold;
+    }
+
+    .hidden { display: none; }
+  </style>
+</head>
+
+<body>
+
+<header>TS ACADEMY AI</header>
+
+<div class="tabs">
+  <div class="tab active" onclick="showTab('crypto')">Crypto</div>
+  <div class="tab" onclick="showTab('forex')">Forex</div>
+</div>
+
+<div class="container">
+
+  <!-- CRYPTO -->
+  <div id="crypto">
+
+    <div class="card">
+      <h3>BTC LONG</h3>
+      <div class="price">Current Price: $66973</div>
+      <div>Entry: 67400</div>
+
+      <div class="badges">
+        <div class="badge green">Leverage 1:10x</div>
+        <div class="badge blue">Risk 2%</div>
+      </div>
+
+      <div class="targets">
+        <div class="target"><span>Target 01</span><span>68999</span></div>
+        <div class="target"><span>Target 02</span><span>71454</span></div>
+        <div class="target"><span>Target 03</span><span>76345</span></div>
+      </div>
+
+      <div class="sl">STOP LOSS: 63200</div>
+    </div>
+
+    <div class="card">
+      <h3>ETH LONG</h3>
+      <div class="price">Current Price: $1959</div>
+      <div>Entry: 1930</div>
+
+      <div class="badges">
+        <div class="badge green">Leverage 1:10x</div>
+        <div class="badge blue">Risk 2%</div>
+      </div>
+
+      <div class="targets">
+        <div class="target"><span>Target 01</span><span>2022</span></div>
+        <div class="target"><span>Target 02</span><span>2285</span></div>
+        <div class="target"><span>Target 03</span><span>2517</span></div>
+      </div>
+
+      <div class="sl">STOP LOSS: 1710</div>
+    </div>
+
+  </div>
+
+  <!-- FOREX -->
+  <div id="forex" class="hidden">
+
+    <div class="card">
+      <h3>GOLD BUY</h3>
+      <div>Entry: 2022</div>
+      <div class="targets">
+        <div class="target"><span>TP1</span><span>2055</span></div>
+        <div class="target"><span>TP2</span><span>2080</span></div>
+        <div class="target"><span>TP3</span><span>2120</span></div>
+      </div>
+      <div class="sl">STOP LOSS: 1998</div>
+    </div>
+
+    <div class="card">
+      <h3>SILVER BUY</h3>
+      <div>Entry: 23.10</div>
+      <div class="targets">
+        <div class="target"><span>TP</span><span>23.80</span></div>
+      </div>
+      <div class="sl">STOP LOSS: 22.60</div>
+    </div>
+
 <div class="card">
       <h3>EURUSD BUY</h3>
       <div>Entry: 1.0820</div>
