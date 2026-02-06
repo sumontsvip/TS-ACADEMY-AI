@@ -2,105 +2,160 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title>Step 3 - JavaScript Interaction</title>
+<meta charset="UTF-8">
+<title>TS ACADEMY AI</title>
 
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: Arial, sans-serif;
-        }
+<style>
+body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    background: #0f172a;
+    color: #e5e7eb;
+}
 
-        body {
-            background: #0f172a;
-            color: #e5e7eb;
-        }
+header {
+    background: #020617;
+    padding: 15px 30px;
+    font-size: 22px;
+    font-weight: bold;
+    color: #38bdf8;
+}
 
-        header {
-            background: #020617;
-            padding: 15px 30px;
-            font-size: 20px;
-            font-weight: bold;
-        }
+.container {
+    max-width: 1100px;
+    margin: 30px auto;
+    padding: 20px;
+}
 
-        .container {
-            max-width: 1100px;
-            margin: 40px auto;
-            padding: 20px;
-        }
+.card {
+    background: #020617;
+    padding: 20px;
+    border-radius: 10px;
+    margin-bottom: 20px;
+    box-shadow: 0 0 20px rgba(0,0,0,0.5);
+}
 
-        .card {
-            background: #020617;
-            padding: 25px;
-            border-radius: 10px;
-            box-shadow: 0 0 20px rgba(0,0,0,0.5);
-            margin-bottom: 20px;
-        }
+.row {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 10px;
+}
 
-        .btn {
-            display: inline-block;
-            margin-top: 15px;
-            padding: 12px 25px;
-            background: #22c55e;
-            color: #000;
-            text-decoration: none;
-            font-weight: bold;
-            border-radius: 6px;
-            cursor: pointer;
-            border: none;
-        }
+.badge {
+    padding: 5px 12px;
+    border-radius: 6px;
+    font-weight: bold;
+}
 
-        .btn:hover {
-            background: #16a34a;
-        }
+.waiting { background: #334155; }
+.active { background: #22c55e; color: #000; }
+.tp { background: #facc15; color: #000; }
+.sl { background: #ef4444; }
 
-        .status {
-            margin-top: 15px;
-            font-weight: bold;
-            color: #38bdf8;
-        }
-    </style>
+.price {
+    font-size: 20px;
+    font-weight: bold;
+}
+</style>
 </head>
+
 <body>
 
-<header>
-    My Trading Dashboard
-</header>
+<header>TS ACADEMY AI – Crypto Signal Engine</header>
 
 <div class="container">
+
     <div class="card">
-        <h2>System Status</h2>
-        <p id="info">
-            Bot is currently OFF
-        </p>
-
-        <button class="btn" onclick="toggleBot()">Toggle Bot</button>
-
-        <div class="status" id="statusText"></div>
+        <div class="row">
+            <div>BTC/USDT</div>
+            <div id="btcStatus" class="badge waiting">WAITING</div>
+        </div>
+        <div class="price" id="btcPrice">Price: --</div>
+        <div id="btcSignal"></div>
     </div>
+
+    <div class="card">
+        <div class="row">
+            <div>ETH/USDT</div>
+            <div id="ethStatus" class="badge waiting">WAITING</div>
+        </div>
+        <div class="price" id="ethPrice">Price: --</div>
+        <div id="ethSignal"></div>
+    </div>
+
 </div>
 
 <script>
-    let botOn = false;
+/* -------------------------
+   CORE LOGIC – NO BULLSHIT
+--------------------------*/
 
-    function toggleBot() {
-        botOn = !botOn;
+// Fake realtime price (for now)
+let btcPrice = 43000;
+let ethPrice = 2300;
 
-        const info = document.getElementById("info");
-        const status = document.getElementById("statusText");
+// Aggressive move tracking
+let btcHigh = btcPrice;
+let btcLow = btcPrice;
+let ethHigh = ethPrice;
+let ethLow = ethPrice;
 
-        if (botOn) {
-            info.textContent = "Bot is currently ON";
-            status.textContent = "Status: Running analysis...";
-            status.style.color = "#22c55e";
-        } else {
-            info.textContent = "Bot is currently OFF";
-            status.textContent = "Status: Stopped";
-            status.style.color = "#ef4444";
-        }
+function randomMove(price) {
+    let move = (Math.random() - 0.5) * 200;
+    return Math.round(price + move);
+}
+
+function fibEntry(high, low) {
+    return low + (high - low) * 0.5; // 0.5 Fibonacci
+}
+
+function updateMarket() {
+
+    // ===== BTC =====
+    btcPrice = randomMove(btcPrice);
+    btcHigh = Math.max(btcHigh, btcPrice);
+    btcLow = Math.min(btcLow, btcPrice);
+
+    document.getElementById("btcPrice").innerText = "Price: " + btcPrice;
+
+    let btcFib = Math.round(fibEntry(btcHigh, btcLow));
+
+    if (Math.abs(btcPrice - btcFib) < 50) {
+        document.getElementById("btcStatus").innerText = "ACTIVE";
+        document.getElementById("btcStatus").className = "badge active";
+        document.getElementById("btcSignal").innerText =
+            "Signal: Entry near Fib 0.5 → " + btcFib;
+    } else {
+        document.getElementById("btcStatus").innerText = "WAITING";
+        document.getElementById("btcStatus").className = "badge waiting";
+        document.getElementById("btcSignal").innerText =
+            "Watching aggressive move...";
     }
+
+    // ===== ETH =====
+    ethPrice = randomMove(ethPrice);
+    ethHigh = Math.max(ethHigh, ethPrice);
+    ethLow = Math.min(ethLow, ethPrice);
+
+    document.getElementById("ethPrice").innerText = "Price: " + ethPrice;
+
+    let ethFib = Math.round(fibEntry(ethHigh, ethLow));
+
+    if (Math.abs(ethPrice - ethFib) < 20) {
+        document.getElementById("ethStatus").innerText = "ACTIVE";
+        document.getElementById("ethStatus").className = "badge active";
+        document.getElementById("ethSignal").innerText =
+            "Signal: Entry near Fib 0.5 → " + ethFib;
+    } else {
+        document.getElementById("ethStatus").innerText = "WAITING";
+        document.getElementById("ethStatus").className = "badge waiting";
+        document.getElementById("ethSignal").innerText =
+            "Waiting for retracement...";
+    }
+}
+
+// Update every 2 sec
+setInterval(updateMarket, 2000);
 </script>
 
 </body>
