@@ -1,70 +1,112 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-<title>Trading Signals</title>
-<style>
-body{
-font-family: Arial;
-background:#f2f2f2;
-padding:20px;
-}
+  <meta charset="UTF-8" />
+  <title>Trading Signals</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f5f5f5;
+      padding: 20px;
+    }
+    .card {
+      background: #fff;
+      border-radius: 8px;
+      padding: 15px;
+      margin-bottom: 15px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    }
+    .title {
+      font-weight: bold;
+      font-size: 18px;
+      color: #1b5e20;
+    }
+    .status {
+      float: right;
+      font-size: 12px;
+      font-weight: bold;
+    }
+    .active { color: green; }
+    .tp { color: blue; }
+    .sl { color: red; }
+    .wait { color: orange; }
 
-.card{
-background:white;
-padding:15px;
-margin:15px 0;
-border-radius:12px;
-box-shadow:0 2px 6px rgba(0,0,0,0.15);
-}
+    .slbar {
+      margin-top: 10px;
+      background: #ff4d4d;
+      color: white;
+      padding: 6px;
+      border-radius: 4px;
+      font-size: 13px;
+      text-align: center;
+    }
+  </style>
 
-.buy{ color:green; font-weight:bold; }
-.status{ float:right; color:green; }
-
-.sl{
-background:#ff4d4d;
-color:white;
-padding:5px;
-border-radius:6px;
-text-align:center;
-margin-top:10px;
-}
-</style>
+  <!-- PASSWORD PROTECTION -->
+  <script>
+    const pass = prompt("Enter Access Password:");
+    if (pass !== "TSVIP2026") {
+      document.body.innerHTML = "<h2>Access Denied</h2>";
+    }
+  </script>
 </head>
 
 <body>
 
 <h2>Trading Signals</h2>
 
+<p style="font-size:13px;color:#666;">
+  Last Updated:
+  <span id="lastUpdated"></span>
+</p>
+
+<script>
+  document.getElementById("lastUpdated").innerText =
+    new Date().toLocaleString("en-IN", { timeZone: "Asia/Kolkata" });
+</script>
+
+<!-- BTC -->
 <div class="card">
-<span class="status">ACTIVE</span>
-<h3 class="buy">BTC LONG</h3>
-Entry: 67400 <br>
-TP: 68999 / 71454 / 76345
-<div class="sl">SL: 63200</div>
+  <div class="title">
+    BTC LONG
+    <span class="status active">ACTIVE</span>
+  </div>
+  <p>Entry: 67400</p>
+  <p>TP: 68999 / 71454 / 76345</p>
+  <div class="slbar">SL: 63200</div>
 </div>
 
+<!-- ETH -->
 <div class="card">
-<span class="status">TP1 HIT</span>
-<h3 class="buy">ETH LONG</h3>
-Entry: 1930 <br>
-TP: 2022 / 2285 / 2517
-<div class="sl">SL: 1710</div>
+  <div class="title">
+    ETH LONG
+    <span class="status tp">TP1 HIT</span>
+  </div>
+  <p>Entry: 1930</p>
+  <p>TP: 2022 / 2285 / 2517</p>
+  <div class="slbar">SL: 1710</div>
 </div>
 
+<!-- GOLD -->
 <div class="card">
-<span class="status">ACTIVE</span>
-<h3 class="buy">GOLD BUY</h3>
-Entry: 2022 <br>
-TP: 2055 / 2080 / 2120
-<div class="sl">SL: 1998</div>
+  <div class="title">
+    GOLD BUY
+    <span class="status active">ACTIVE</span>
+  </div>
+  <p>Entry: 2022</p>
+  <p>TP: 2055 / 2080 / 2120</p>
+  <div class="slbar">SL: 1998</div>
 </div>
 
+<!-- EURUSD -->
 <div class="card">
-<span class="status">WAITING</span>
-<h3 class="buy">EURUSD BUY</h3>
-Entry: 1.0820 <br>
-TP: 1.0870 / 1.0910
-<div class="sl">SL: 1.0785</div>
+  <div class="title">
+    EURUSD BUY
+    <span class="status wait">WAITING</span>
+  </div>
+  <p>Entry: 1.0820</p>
+  <p>TP: 1.0870 / 1.0910</p>
+  <div class="slbar">SL: 1.0785</div>
 </div>
 
 </body>
