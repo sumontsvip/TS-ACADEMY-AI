@@ -1,188 +1,154 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>TS ACADEMY AI – Live Crypto Signals</title>
+<title>TS ACADEMY AI</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
-@keyframes glow {
-  0% { text-shadow: 0 0 6px #38bdf8; }
-  50% { text-shadow: 0 0 20px #22c55e; }
-  100% { text-shadow: 0 0 6px #38bdf8; }
+body {
+  background: radial-gradient(circle at top, #0a0f1f, #000);
+  font-family: Arial, sans-serif;
+  color: #fff;
+  margin: 0;
 }
-
-body{
-  margin:0;
-  font-family:Segoe UI,Arial;
-  background:radial-gradient(circle at top,#020617,#000);
-  color:#e5e7eb;
+h1 {
+  text-align: center;
+  color: #00f7ff;
+  text-shadow: 0 0 15px #00f7ff;
 }
+.container {
+  max-width: 900px;
+  margin: auto;
+  padding: 15px;
+}
+.card {
+  background: #050b18;
+  border-radius: 12px;
+  padding: 15px;
+  margin-bottom: 15px;
+  box-shadow: 0 0 20px rgba(0,255,255,.15);
+}
+.asset {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.price {
+  font-size: 22px;
+  color: #00ff9c;
+  text-shadow: 0 0 10px #00ff9c;
+}
+.status {
+  font-weight: bold;
+  padding: 6px 12px;
+  border-radius: 6px;
+  text-shadow: 0 0 10px;
+}
+.waiting { background:#333; color:#aaa; }
+.buy { background:#003300; color:#00ff00; }
+.sell { background:#330000; color:#ff3b3b; }
 
-header{
+.footer {
   text-align:center;
-  padding:20px;
-  font-size:26px;
-  font-weight:800;
-  color:#38bdf8;
-  animation:glow 2.5s infinite;
-}
-
-.container{
-  max-width:900px;
-  margin:30px auto;
-}
-
-.card{
-  background:#020617;
-  border-radius:16px;
-  padding:24px;
-  margin-bottom:25px;
-  box-shadow:0 0 35px rgba(56,189,248,.15);
-}
-
-.row{
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-}
-
-.symbol{
-  font-size:20px;
-  font-weight:700;
-}
-
-.badge{
-  padding:6px 18px;
-  border-radius:30px;
-  font-size:13px;
-  font-weight:800;
-}
-
-.waiting{background:#334155;}
-.buy{background:#22c55e;color:#000;box-shadow:0 0 15px #22c55e;}
-.sell{background:#ef4444;color:#000;box-shadow:0 0 15px #ef4444;}
-
-.price{
-  margin-top:12px;
-  font-size:34px;
-  font-weight:800;
-  color:#38bdf8;
-  animation:glow 3s infinite;
-}
-
-.logic{
-  margin-top:8px;
   font-size:14px;
-  color:#cbd5f5;
+  opacity:.8;
 }
-
-footer{
-  margin-top:40px;
-  text-align:center;
-  font-size:13px;
-  color:#94a3b8;
-}
-footer a{
-  color:#38bdf8;
-  text-decoration:none;
-}
-footer a:hover{ text-decoration:underline; }
+a { color:#00f7ff; text-decoration:none; }
 </style>
 </head>
 
 <body>
-
-<header>TS ACADEMY AI — LIVE CRYPTO SIGNALS</header>
+<h1>TS ACADEMY AI</h1>
 
 <div class="container">
 
-  <div class="card">
-    <div class="row">
-      <div class="symbol">BTCUSDT</div>
-      <div id="btcStatus" class="badge waiting">WAITING</div>
-    </div>
-    <div id="btcPrice" class="price">--</div>
-    <div id="btcLogic" class="logic"></div>
+<div class="card">
+  <div class="asset">
+    <div>BTC / USDT</div>
+    <div class="price" id="btcPrice">--</div>
+    <div class="status waiting" id="btcSignal">WAITING</div>
   </div>
+</div>
 
-  <div class="card">
-    <div class="row">
-      <div class="symbol">ETHUSDT</div>
-      <div id="ethStatus" class="badge waiting">WAITING</div>
-    </div>
-    <div id="ethPrice" class="price">--</div>
-    <div id="ethLogic" class="logic"></div>
+<div class="card">
+  <div class="asset">
+    <div>ETH / USDT</div>
+    <div class="price" id="ethPrice">--</div>
+    <div class="status waiting" id="ethSignal">WAITING</div>
   </div>
+</div>
+
+<div class="card">
+  <b>FOREX (UI READY)</b><br>
+  GOLD • SILVER • EURUSD<br>
+  <span style="color:#ff9800">Waiting for API</span>
+</div>
+
+<div class="footer">
+  Any problem Contact 👉 <a href="https://t.me/TSADMINE">TS ADMIN</a><br>
+  Official Channel 👉 <a href="https://t.me/Trader_Sumon_TS">Trader Sumon TS</a>
+</div>
 
 </div>
 
-<footer>
-  Any problem Contact 👉 <a href="https://t.me/TSADMINE" target="_blank">TS ADMIN</a><br><br>
-  Official Telegram Channel 👉
-  <a href="https://t.me/Trader_Sumon_TS" target="_blank">Trader Sumon TS</a>
-</footer>
-
 <script>
-function startEngine(symbol, priceEl, statusEl, logicEl){
+function engine(symbol, priceEl, signalEl) {
+  let last = null;
+  let high = null;
+  let low = null;
+  let cooldown = false;
 
-  let lastPrice=null;
+  const ws = new WebSocket(
+    wss://stream.binance.com:9443/ws/${symbol}@trade
+  );
 
-  async function tick(){
-    try{
-      const res=await fetch(
-        https://api.binance.com/api/v3/ticker/price?symbol=${symbol}
-      );
-      const data=await res.json();
-      const price=parseFloat(data.price);
+  ws.onmessage = e => {
+    const data = JSON.parse(e.data);
+    const price = parseFloat(data.p);
+    priceEl.innerText = price.toFixed(2);
 
-      priceEl.innerText=price.toFixed(2);
+    if (!last) {
+      last = price;
+      high = price;
+      low = price;
+      return;
+    }
 
-      if(lastPrice){
-        const diff=price-lastPrice;
+    high = Math.max(high, price);
+    low = Math.min(low, price);
 
-        // SIMPLE REAL SIGNAL LOGIC (works always)
-        if(diff>price*0.0003){
-          statusEl.className="badge buy";
-          statusEl.innerText="BUY";
-          logicEl.innerText="Aggressive bullish move detected";
-        }
-        else if(diff<-price*0.0003){
-          statusEl.className="badge sell";
-          statusEl.innerText="SELL";
-          logicEl.innerText="Aggressive bearish move detected";
-        }
-        else{
-          statusEl.className="badge waiting";
-          statusEl.innerText="WAITING";
-          logicEl.innerText="Market ranging – waiting impulse";
-        }
+    const diff = price - last;
+    const aggressive = Math.abs(diff) > price * 0.0004;
+
+    if (aggressive && !cooldown) {
+      const fib50 = (high + low) / 2;
+
+      if (price > fib50) {
+        signalEl.innerText = "BUY";
+        signalEl.className = "status buy";
+      } else {
+        signalEl.innerText = "SELL";
+        signalEl.className = "status sell";
       }
 
-      lastPrice=price;
-
-    }catch(e){
-      logicEl.innerText="Price fetch error… retrying";
+      cooldown = true;
+      setTimeout(() => {
+        signalEl.innerText = "WAITING";
+        signalEl.className = "status waiting";
+        high = price;
+        low = price;
+        cooldown = false;
+      }, 120000);
     }
-  }
 
-  tick();
-  setInterval(tick,1500);
+    last = price;
+  };
 }
 
-startEngine(
-  "BTCUSDT",
-  document.getElementById("btcPrice"),
-  document.getElementById("btcStatus"),
-  document.getElementById("btcLogic")
-);
-
-startEngine(
-  "ETHUSDT",
-  document.getElementById("ethPrice"),
-  document.getElementById("ethStatus"),
-  document.getElementById("ethLogic")
-);
+engine("btcusdt", btcPrice, btcSignal);
+engine("ethusdt", ethPrice, ethSignal);
 </script>
-
 </body>
 </html>
