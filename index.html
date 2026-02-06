@@ -13,8 +13,20 @@ padding:20px;
 background:white;
 padding:15px;
 margin:15px 0;
-border-radius:10px;
-box-shadow:0 0 5px gray;
+border-radius:12px;
+box-shadow:0 2px 6px rgba(0,0,0,0.15);
+}
+
+.buy{ color:green; font-weight:bold; }
+.status{ float:right; color:green; }
+
+.sl{
+background:#ff4d4d;
+color:white;
+padding:5px;
+border-radius:6px;
+text-align:center;
+margin-top:10px;
 }
 </style>
 </head>
@@ -24,31 +36,35 @@ box-shadow:0 0 5px gray;
 <h2>Trading Signals</h2>
 
 <div class="card">
-<h3>BTC LONG</h3>
+<span class="status">ACTIVE</span>
+<h3 class="buy">BTC LONG</h3>
 Entry: 67400 <br>
-TP: 68999 / 71454 / 76345 <br>
-SL: 63200
+TP: 68999 / 71454 / 76345
+<div class="sl">SL: 63200</div>
 </div>
 
 <div class="card">
-<h3>ETH LONG</h3>
+<span class="status">TP1 HIT</span>
+<h3 class="buy">ETH LONG</h3>
 Entry: 1930 <br>
-TP: 2022 / 2285 / 2517 <br>
-SL: 1710
+TP: 2022 / 2285 / 2517
+<div class="sl">SL: 1710</div>
 </div>
 
 <div class="card">
-<h3>GOLD BUY</h3>
+<span class="status">ACTIVE</span>
+<h3 class="buy">GOLD BUY</h3>
 Entry: 2022 <br>
-TP: 2055 / 2080 / 2120 <br>
-SL: 1998
+TP: 2055 / 2080 / 2120
+<div class="sl">SL: 1998</div>
 </div>
 
 <div class="card">
-<h3>EURUSD BUY</h3>
+<span class="status">WAITING</span>
+<h3 class="buy">EURUSD BUY</h3>
 Entry: 1.0820 <br>
-TP: 1.0870 / 1.0910 <br>
-SL: 1.0785
+TP: 1.0870 / 1.0910
+<div class="sl">SL: 1.0785</div>
 </div>
 
 </body>
