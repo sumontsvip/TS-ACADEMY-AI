@@ -6,64 +6,73 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
-body {
+body{
   background:#020617;
-  font-family:Arial, sans-serif;
+  font-family:Arial;
   color:#fff;
+  margin:0;
 }
-h1 {
+h1{
   text-align:center;
   color:#00eaff;
   text-shadow:0 0 20px #00eaff;
 }
-.container { max-width:900px; margin:auto; padding:15px; }
-.card {
+.hidden{display:none}
+.container{max-width:900px;margin:auto;padding:15px}
+.card{
   background:#050b18;
   padding:15px;
   border-radius:12px;
   margin-bottom:15px;
   box-shadow:0 0 25px rgba(0,255,255,.2);
 }
-.row {
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-}
-.price {
+.row{display:flex;justify-content:space-between;align-items:center}
+.price{
   font-size:22px;
   color:#00ff9c;
   text-shadow:0 0 10px #00ff9c;
 }
-.status {
+.status{
   padding:6px 14px;
   border-radius:6px;
   font-weight:bold;
-  text-shadow:0 0 10px;
 }
-.wait { background:#222; color:#aaa; }
-.buy { background:#003300; color:#00ff00; }
-.sell { background:#330000; color:#ff3b3b; }
-.footer {
-  text-align:center;
-  font-size:14px;
-  opacity:.8;
+.wait{background:#222;color:#aaa}
+.buy{background:#003300;color:#00ff00}
+.sell{background:#330000;color:#ff3b3b}
+.levels{font-size:13px;opacity:.9;margin-top:6px}
+.footer{text-align:center;font-size:14px;opacity:.8}
+input,button{
+  padding:10px;
+  font-size:16px;
+  border-radius:6px;
+  border:none;
 }
-a { color:#00eaff; text-decoration:none; }
+button{background:#00eaff;color:#000;font-weight:bold}
 </style>
 </head>
 
 <body>
-<h1>TS ACADEMY AI</h1>
 
+<!-- PASSWORD GATE -->
+<div id="gate" style="text-align:center;margin-top:40vh">
+  <h2>Enter Access Password</h2>
+  <input id="pass" type="password" placeholder="Password">
+  <br><br>
+  <button onclick="unlock()">ENTER</button>
+</div>
+
+<div id="app" class="hidden">
+<h1>TS ACADEMY AI</h1>
 <div class="container">
 
-<!-- CRYPTO -->
 <div class="card">
   <div class="row">
     <b>BTC / USDT</b>
     <div class="price" id="btcPrice">--</div>
     <div class="status wait" id="btcSignal">WAITING</div>
   </div>
+  <div class="levels" id="btcLevels"></div>
 </div>
 
 <div class="card">
@@ -72,15 +81,16 @@ a { color:#00eaff; text-decoration:none; }
     <div class="price" id="ethPrice">--</div>
     <div class="status wait" id="ethSignal">WAITING</div>
   </div>
+  <div class="levels" id="ethLevels"></div>
 </div>
 
-<!-- FOREX -->
 <div class="card">
   <div class="row">
     <b>EUR / USD</b>
     <div class="price" id="eurPrice">--</div>
     <div class="status wait" id="eurSignal">WAITING</div>
   </div>
+  <div class="levels" id="eurLevels"></div>
 </div>
 
 <div class="card">
@@ -89,6 +99,7 @@ a { color:#00eaff; text-decoration:none; }
     <div class="price" id="goldPrice">--</div>
     <div class="status wait" id="goldSignal">WAITING</div>
   </div>
+  <div class="levels" id="goldLevels"></div>
 </div>
 
 <div class="footer">
@@ -97,93 +108,108 @@ Official Channel 👉 <a href="https://t.me/Trader_Sumon_TS">Trader Sumon TS</a>
 </div>
 
 </div>
+</div>
 
 <script>
-/* ================== CRYPTO ENGINE ================== */
-function cryptoEngine(symbol, priceEl, signalEl) {
-  let last=null, high=null, low=null, cooldown=false;
+/* PASSWORD */
+function unlock(){
+  if(document.getElementById("pass").value==="TSVIP2026"){
+    gate.classList.add("hidden");
+    app.classList.remove("hidden");
+  } else alert("Wrong Password");
+}
 
-  const ws = new WebSocket(
-    wss://stream.binance.com:9443/ws/${symbol}@trade
-  );
+/* ===== CRYPTO ENGINE with FIB 0.5 ===== */
+function cryptoEngine(symbol, priceEl, signalEl, levelEl){
+  let last=null, high=null, low=null, impulse=false, direction=null;
 
-  ws.onmessage = e => {
-    const p = parseFloat(JSON.parse(e.data).p);
-    priceEl.innerText = p.toFixed(2);
+  const ws=new WebSocket(wss://stream.binance.com:9443/ws/${symbol}@trade);
+  ws.onmessage=e=>{
+    const p=parseFloat(JSON.parse(e.data).p);
+    priceEl.innerText=p.toFixed(2);
 
-    if(!last){ last=p; high=p; low=p; return; }
-    high=Math.max(high,p); low=Math.min(low,p);
+    if(!last){last=p;return}
 
-    const aggressive=Math.abs(p-last)>p*0.0004;
-    if(aggressive && !cooldown){
+    const diff=p-last;
+    if(!impulse && Math.abs(diff)>p*0.0006){
+      impulse=true;
+      direction=diff>0?"BUY":"SELL";
+      high=p; low=p;
+    }
+
+    if(impulse){
+      high=Math.max(high,p);
+      low=Math.min(low,p);
       const fib50=(high+low)/2;
-      if(p>fib50){
-        signalEl.innerText="BUY";
-        signalEl.className="status buy";
-      } else {
-        signalEl.innerText="SELL";
-        signalEl.className="status sell";
+
+      if(Math.abs(p-fib50)<p*0.0003){
+        const sl=direction==="BUY"?low:high;
+        const tp=direction==="BUY"
+          ?p+(p-sl)*2
+          :p-(sl-p)*2;
+
+        signalEl.innerText=direction;
+        signalEl.className="status "+(direction==="BUY"?"buy":"sell");
+        levelEl.innerText=
+          Entry: ${p.toFixed(2)} | SL: ${sl.toFixed(2)} | TP: ${tp.toFixed(2)};
+
+        impulse=false;
       }
-      cooldown=true;
-      setTimeout(()=>{
-        signalEl.innerText="WAITING";
-        signalEl.className="status wait";
-        high=p; low=p; cooldown=false;
-      },120000);
     }
     last=p;
   };
 }
 
-/* ================== FOREX ENGINE ================== */
+/* ===== FOREX ENGINE (1m polling) ===== */
 const API_KEY="6cb638d89b1b472b9865061fd1cd9f97";
 
-function forexEngine(symbol, priceEl, signalEl){
-  let last=null;
+function forexEngine(symbol, priceEl, signalEl, levelEl){
+  let impulse=false, high=null, low=null, direction=null;
 
-  async function fetchPrice(){
-    try{
-      const res=await fetch(
-        https://api.twelvedata.com/time_series?symbol=${symbol}&interval=1min&apikey=${API_KEY}&outputsize=3
-      );
-      const data=await res.json();
-      if(!data.values) return;
+  async function tick(){
+    const r=await fetch(
+      https://api.twelvedata.com/time_series?symbol=${symbol}&interval=1min&apikey=${API_KEY}&outputsize=2
+    );
+    const d=await r.json();
+    if(!d.values) return;
 
-      const close=parseFloat(data.values[0].close);
-      const open=parseFloat(data.values[0].open);
+    const o=+d.values[0].open;
+    const c=+d.values[0].close;
+    priceEl.innerText=c.toFixed(5);
 
-      priceEl.innerText=close.toFixed(5);
+    if(!impulse && Math.abs(c-o)>o*0.0006){
+      impulse=true;
+      direction=c>o?"BUY":"SELL";
+      high=Math.max(o,c);
+      low=Math.min(o,c);
+    }
 
-      if(!last){ last=close; return; }
+    if(impulse){
+      const fib50=(high+low)/2;
+      if(Math.abs(c-fib50)<o*0.0004){
+        const sl=direction==="BUY"?low:high;
+        const tp=direction==="BUY"
+          ?c+(c-sl)*2
+          :c-(sl-c)*2;
 
-      const aggressive=Math.abs(close-open)>open*0.0006;
+        signalEl.innerText=direction;
+        signalEl.className="status "+(direction==="BUY"?"buy":"sell");
+        levelEl.innerText=
+          Entry:${c} SL:${sl} TP:${tp};
 
-      if(aggressive){
-        if(close>open){
-          signalEl.innerText="BUY";
-          signalEl.className="status buy";
-        } else {
-          signalEl.innerText="SELL";
-          signalEl.className="status sell";
-        }
-      } else {
-        signalEl.innerText="WAITING";
-        signalEl.className="status wait";
+        impulse=false;
       }
-
-      last=close;
-    }catch(e){}
+    }
   }
-  fetchPrice();
-  setInterval(fetchPrice,60000);
+  tick();
+  setInterval(tick,60000);
 }
 
 /* START */
-cryptoEngine("btcusdt", btcPrice, btcSignal);
-cryptoEngine("ethusdt", ethPrice, ethSignal);
-
-forexEngine("EUR/USD", eurPrice, eurSignal);
-forexEngine("XAU/USD", goldPrice, goldSignal);
+cryptoEngine("btcusdt",btcPrice,btcSignal,btcLevels);
+cryptoEngine("ethusdt",ethPrice,ethSignal,ethLevels);
+forexEngine("EUR/USD",eurPrice,eurSignal,eurLevels);
+forexEngine("XAU/USD",goldPrice,goldSignal,goldLevels);
 </script>
 
 </body>
