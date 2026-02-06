@@ -1,22 +1,24 @@
-<!DOCTYPE html>
+
+  <!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>TS ACADEMY AI – Crypto Pro Engine</title>
+<title>TS ACADEMY AI – Crypto Final Engine</title>
 
 <style>
 body {
   margin: 0;
-  font-family: Arial, sans-serif;
-  background: #0b1220;
+  font-family: "Segoe UI", Arial, sans-serif;
+  background: radial-gradient(circle at top, #020617, #000);
   color: #e5e7eb;
 }
 header {
-  padding: 15px 30px;
-  background: #020617;
+  padding: 18px 30px;
+  background: linear-gradient(90deg,#020617,#020617);
   font-size: 22px;
-  font-weight: bold;
+  font-weight: 700;
   color: #38bdf8;
+  letter-spacing: 1px;
 }
 .container {
   max-width: 1100px;
@@ -24,99 +26,111 @@ header {
 }
 .card {
   background: #020617;
-  padding: 20px;
-  border-radius: 10px;
-  margin-bottom: 20px;
+  padding: 22px;
+  border-radius: 14px;
+  margin-bottom: 25px;
+  box-shadow: 0 0 25px rgba(0,0,0,.6);
 }
 .row {
   display: flex;
   justify-content: space-between;
+  align-items: center;
+}
+.symbol {
+  font-size: 18px;
+  font-weight: 600;
 }
 .badge {
-  padding: 6px 12px;
-  border-radius: 6px;
-  font-weight: bold;
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 700;
 }
 .waiting { background: #334155; }
 .active { background: #22c55e; color:#000; }
 .tp { background: #facc15; color:#000; }
 .sl { background: #ef4444; color:#000; }
-.htf { background:#0ea5e9; color:#000; }
 
 .price {
-  font-size: 22px;
+  font-size: 26px;
   margin-top: 10px;
 }
-.logic {
+.logic, .extra {
   margin-top: 6px;
   font-size: 13px;
   color: #94a3b8;
+}
+.extra {
+  color: #60a5fa;
 }
 </style>
 </head>
 
 <body>
 
-<header>TS ACADEMY AI – Crypto (HTF Filter ON)</header>
+<header>TS ACADEMY AI — Crypto Signal Engine (PRO)</header>
 
 <div class="container">
 
   <div class="card">
     <div class="row">
-      <div>BTCUSDT</div>
+      <div class="symbol">BTCUSDT</div>
       <div id="btcStatus" class="badge waiting">WAITING</div>
     </div>
-    <div class="price" id="btcPrice">Price: --</div>
+    <div class="price" id="btcPrice">--</div>
     <div class="logic" id="btcLogic"></div>
-    <div class="logic" id="btcHTF"></div>
+    <div class="extra" id="btcExtra"></div>
   </div>
 
   <div class="card">
     <div class="row">
-      <div>ETHUSDT</div>
+      <div class="symbol">ETHUSDT</div>
       <div id="ethStatus" class="badge waiting">WAITING</div>
     </div>
-    <div class="price" id="ethPrice">Price: --</div>
+    <div class="price" id="ethPrice">--</div>
     <div class="logic" id="ethLogic"></div>
-    <div class="logic" id="ethHTF"></div>
+    <div class="extra" id="ethExtra"></div>
   </div>
 
 </div>
 
 <script>
-function createEngine(symbol, priceEl, statusEl, logicEl, htfEl) {
+function createEngine(symbol, priceEl, statusEl, logicEl, extraEl) {
 
   let lastPrice = null;
-  let pricesHTF = []; // pseudo 15m bias
+  let pricesHTF = [];
   let htfBias = "NEUTRAL";
 
-  let impulseHigh = null;
-  let impulseLow = null;
-  let direction = null;
+  let impulseHigh=null, impulseLow=null, direction=null;
+  let tradeActive=false, entry=0, sl=0, tp=0;
+  let lastTradeTime=0;
 
-  let tradeActive = false;
-  let entry = 0, sl = 0, tp = 0;
   const RR = 2;
+  const COOLDOWN = 120000; // 2 min
+  const MIN_VOLUME = 5; // filter fake impulse
 
   const ws = new WebSocket(
     wss://stream.binance.com:9443/ws/${symbol}@trade
   );
 
   ws.onmessage = (e) => {
-    const price = parseFloat(JSON.parse(e.data).p);
-    priceEl.innerText = "Price: " + price.toFixed(2);
+    const d = JSON.parse(e.data);
+    const price = parseFloat(d.p);
+    const volume = parseFloat(d.q);
 
-    // ===== HTF LOGIC (rolling bias) =====
+    priceEl.innerText = price.toFixed(2);
+
+    // ===== HTF bias =====
     pricesHTF.push(price);
-    if (pricesHTF.length > 120) pricesHTF.shift(); // ~15m feel
-
+    if (pricesHTF.length > 120) pricesHTF.shift();
     if (pricesHTF.length >= 60) {
-      const first = pricesHTF[0];
-      const last = pricesHTF[pricesHTF.length - 1];
-      htfBias = last > first ? "BULLISH" : "BEARISH";
+      htfBias =
+        pricesHTF[pricesHTF.length-1] > pricesHTF[0]
+        ? "BULLISH"
+        : "BEARISH";
     }
 
-    htfEl.innerText = "HTF Bias: " + htfBias;
+    extraEl.innerText = HTF: ${htfBias} | Vol: ${volume.toFixed(2)};
 
     if (!lastPrice) {
       lastPrice = price;
@@ -124,12 +138,18 @@ function createEngine(symbol, priceEl, statusEl, logicEl, htfEl) {
     }
 
     const diff = price - lastPrice;
+    const now = Date.now();
 
-    // ===== Aggressive impulse =====
-    if (!tradeActive && Math.abs(diff) > price * 0.0008) {
+    // ===== Aggressive + volume + cooldown =====
+    if (
+      !tradeActive &&
+      impulseHigh === null &&
+      Math.abs(diff) > price * 0.0008 &&
+      volume >= MIN_VOLUME &&
+      now - lastTradeTime > COOLDOWN
+    ) {
       const tempDir = diff > 0 ? "BUY" : "SELL";
 
-      // HTF FILTER
       if (
         (tempDir === "BUY" && htfBias === "BULLISH") ||
         (tempDir === "SELL" && htfBias === "BEARISH")
@@ -140,7 +160,7 @@ function createEngine(symbol, priceEl, statusEl, logicEl, htfEl) {
       }
     }
 
-    // ===== Fib 0.5 Entry =====
+    // ===== Fib 0.5 =====
     if (!tradeActive && impulseHigh && impulseLow) {
       const fib50 = impulseLow + (impulseHigh - impulseLow) * 0.5;
 
@@ -156,49 +176,47 @@ function createEngine(symbol, priceEl, statusEl, logicEl, htfEl) {
         }
 
         tradeActive = true;
-        statusEl.innerText = "ACTIVE";
         statusEl.className = "badge active";
+        statusEl.innerText = "ACTIVE";
 
-        logicEl.innerText =
+      logicEl.innerText =
           ${direction} @ ${entry.toFixed(2)} | SL ${sl.toFixed(2)} | TP ${tp.toFixed(2)} | RR 1:${RR};
       }
     }
 
-    // ===== Trade Management =====
+    // ===== Manage trade =====
     if (tradeActive) {
       if (
-        (direction === "BUY" && price >= tp) ||
-        (direction === "SELL" && price <= tp)
+        (direction==="BUY" && price>=tp) ||
+        (direction==="SELL" && price<=tp)
       ) {
-        statusEl.innerText = "TP HIT";
-        statusEl.className = "badge tp";
-        logicEl.innerText = "TP hit. Waiting new setup.";
+        statusEl.className="badge tp";
+        statusEl.innerText="TP HIT";
         reset();
       }
       else if (
-        (direction === "BUY" && price <= sl) ||
-        (direction === "SELL" && price >= sl)
+        (direction==="BUY" && price<=sl) ||
+        (direction==="SELL" && price>=sl)
       ) {
-        statusEl.innerText = "SL HIT";
-        statusEl.className = "badge sl";
-        logicEl.innerText = "SL hit. Setup failed.";
+        statusEl.className="badge sl";
+        statusEl.innerText="SL HIT";
         reset();
       }
     }
 
-    if (!tradeActive) {
-      statusEl.innerText = "WAITING";
-      statusEl.className = "badge waiting";
-      if (!logicEl.innerText)
-        logicEl.innerText = "Waiting HTF aligned impulse → Fib 0.5";
+    if (!tradeActive && !impulseHigh) {
+      statusEl.className="badge waiting";
+      statusEl.innerText="WAITING";
+      logicEl.innerText="Waiting HTF + Volume impulse → Fib 0.5";
     }
 
     lastPrice = price;
   };
 
   function reset() {
-    tradeActive = false;
-    impulseHigh = impulseLow = direction = null;
+    tradeActive=false;
+    impulseHigh=impulseLow=direction=null;
+    lastTradeTime=Date.now();
   }
 }
 
@@ -208,7 +226,7 @@ createEngine(
   document.getElementById("btcPrice"),
   document.getElementById("btcStatus"),
   document.getElementById("btcLogic"),
-  document.getElementById("btcHTF")
+  document.getElementById("btcExtra")
 );
 
 createEngine(
@@ -216,7 +234,7 @@ createEngine(
   document.getElementById("ethPrice"),
   document.getElementById("ethStatus"),
   document.getElementById("ethLogic"),
-  document.getElementById("ethHTF")
+  document.getElementById("ethExtra")
 );
 </script>
 
