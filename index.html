@@ -1,161 +1,183 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>TS ACADEMY AI</title>
+<title>TS ACADEMY AI – Crypto Engine</title>
 
 <style>
 body {
-    margin: 0;
-    font-family: Arial, sans-serif;
-    background: #0f172a;
-    color: #e5e7eb;
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background: #0b1220;
+  color: #e5e7eb;
 }
-
 header {
-    background: #020617;
-    padding: 15px 30px;
-    font-size: 22px;
-    font-weight: bold;
-    color: #38bdf8;
+  padding: 15px 30px;
+  background: #020617;
+  font-size: 22px;
+  font-weight: bold;
+  color: #38bdf8;
 }
-
 .container {
-    max-width: 1100px;
-    margin: 30px auto;
-    padding: 20px;
+  max-width: 1100px;
+  margin: 30px auto;
 }
-
 .card {
-    background: #020617;
-    padding: 20px;
-    border-radius: 10px;
-    margin-bottom: 20px;
-    box-shadow: 0 0 20px rgba(0,0,0,0.5);
+  background: #020617;
+  padding: 20px;
+  border-radius: 10px;
+  margin-bottom: 20px;
 }
-
 .row {
-    display: flex;
-    justify-content: space-between;
-    margin-bottom: 10px;
+  display: flex;
+  justify-content: space-between;
 }
-
 .badge {
-    padding: 5px 12px;
-    border-radius: 6px;
-    font-weight: bold;
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-weight: bold;
 }
-
 .waiting { background: #334155; }
-.active { background: #22c55e; color: #000; }
-.tp { background: #facc15; color: #000; }
-.sl { background: #ef4444; }
+.active { background: #22c55e; color:#000; }
+.tp { background: #facc15; color:#000; }
 
 .price {
-    font-size: 20px;
-    font-weight: bold;
+  font-size: 22px;
+  margin-top: 10px;
+}
+.logic {
+  margin-top: 8px;
+  color: #94a3b8;
 }
 </style>
 </head>
 
 <body>
 
-<header>TS ACADEMY AI – Crypto Signal Engine</header>
+<header>TS ACADEMY AI – Real Crypto Strategy</header>
 
 <div class="container">
 
-    <div class="card">
-        <div class="row">
-            <div>BTC/USDT</div>
-            <div id="btcStatus" class="badge waiting">WAITING</div>
-        </div>
-        <div class="price" id="btcPrice">Price: --</div>
-        <div id="btcSignal"></div>
+  <div class="card">
+    <div class="row">
+      <div>BTCUSDT</div>
+      <div id="btcStatus" class="badge waiting">WAITING</div>
     </div>
+    <div class="price" id="btcPrice">Price: --</div>
+    <div class="logic" id="btcLogic"></div>
+  </div>
 
-    <div class="card">
-        <div class="row">
-            <div>ETH/USDT</div>
-            <div id="ethStatus" class="badge waiting">WAITING</div>
-        </div>
-        <div class="price" id="ethPrice">Price: --</div>
-        <div id="ethSignal"></div>
+  <div class="card">
+    <div class="row">
+      <div>ETHUSDT</div>
+      <div id="ethStatus" class="badge waiting">WAITING</div>
     </div>
+    <div class="price" id="ethPrice">Price: --</div>
+    <div class="logic" id="ethLogic"></div>
+  </div>
 
 </div>
 
 <script>
-/* -------------------------
-   CORE LOGIC – NO BULLSHIT
---------------------------*/
+/* ===============================
+   CORE STRATEGY ENGINE
+================================*/
 
-// Fake realtime price (for now)
-let btcPrice = 43000;
-let ethPrice = 2300;
+function createEngine(symbol, priceEl, statusEl, logicEl) {
 
-// Aggressive move tracking
-let btcHigh = btcPrice;
-let btcLow = btcPrice;
-let ethHigh = ethPrice;
-let ethLow = ethPrice;
+  let lastPrice = null;
+  let impulseHigh = null;
+  let impulseLow = null;
+  let direction = null;
+  let tradeActive = false;
+  let entry = null;
+  let tp = null;
 
-function randomMove(price) {
-    let move = (Math.random() - 0.5) * 200;
-    return Math.round(price + move);
-}
+  const ws = new WebSocket(
+    wss://stream.binance.com:9443/ws/${symbol}@trade
+  );
 
-function fibEntry(high, low) {
-    return low + (high - low) * 0.5; // 0.5 Fibonacci
-}
+  ws.onmessage = (event) => {
+    const data = JSON.parse(event.data);
+    const price = parseFloat(data.p);
 
-function updateMarket() {
+    priceEl.innerText = "Price: " + price.toFixed(2);
 
-    // ===== BTC =====
-    btcPrice = randomMove(btcPrice);
-    btcHigh = Math.max(btcHigh, btcPrice);
-    btcLow = Math.min(btcLow, btcPrice);
-
-    document.getElementById("btcPrice").innerText = "Price: " + btcPrice;
-
-    let btcFib = Math.round(fibEntry(btcHigh, btcLow));
-
-    if (Math.abs(btcPrice - btcFib) < 50) {
-        document.getElementById("btcStatus").innerText = "ACTIVE";
-        document.getElementById("btcStatus").className = "badge active";
-        document.getElementById("btcSignal").innerText =
-            "Signal: Entry near Fib 0.5 → " + btcFib;
-    } else {
-        document.getElementById("btcStatus").innerText = "WAITING";
-        document.getElementById("btcStatus").className = "badge waiting";
-        document.getElementById("btcSignal").innerText =
-            "Watching aggressive move...";
+    if (!lastPrice) {
+      lastPrice = price;
+      return;
     }
 
-    // ===== ETH =====
-    ethPrice = randomMove(ethPrice);
-    ethHigh = Math.max(ethHigh, ethPrice);
-    ethLow = Math.min(ethLow, ethPrice);
+    const diff = price - lastPrice;
 
-    document.getElementById("ethPrice").innerText = "Price: " + ethPrice;
-
-    let ethFib = Math.round(fibEntry(ethHigh, ethLow));
-
-    if (Math.abs(ethPrice - ethFib) < 20) {
-        document.getElementById("ethStatus").innerText = "ACTIVE";
-        document.getElementById("ethStatus").className = "badge active";
-        document.getElementById("ethSignal").innerText =
-            "Signal: Entry near Fib 0.5 → " + ethFib;
-    } else {
-        document.getElementById("ethStatus").innerText = "WAITING";
-        document.getElementById("ethStatus").className = "badge waiting";
-        document.getElementById("ethSignal").innerText =
-            "Waiting for retracement...";
+    // -------- Aggressive impulse detect --------
+    if (Math.abs(diff) > price * 0.0008 && !tradeActive) {
+      impulseHigh = Math.max(price, lastPrice);
+      impulseLow = Math.min(price, lastPrice);
+      direction = diff > 0 ? "BUY" : "SELL";
     }
+
+    // -------- Fibonacci 0.5 --------
+    if (impulseHigh && impulseLow && !tradeActive) {
+      const fib50 = impulseLow + (impulseHigh - impulseLow) * 0.5;
+
+      if (Math.abs(price - fib50) < price * 0.0003) {
+        tradeActive = true;
+        entry = fib50;
+        tp = direction === "BUY"
+          ? entry + (impulseHigh - impulseLow)
+          : entry - (impulseHigh - impulseLow);
+
+        statusEl.innerText = "ACTIVE";
+        statusEl.className = "badge active";
+
+        logicEl.innerText =
+          ${direction} @ Fib 0.5 | Entry ${entry.toFixed(2)} | TP ${tp.toFixed(2)};
+      }
+    }
+
+    // -------- TP Hit --------
+    if (tradeActive) {
+      if (
+        (direction === "BUY" && price >= tp) ||
+        (direction === "SELL" && price <= tp)
+      ) {
+        statusEl.innerText = "TP HIT";
+        statusEl.className = "badge tp";
+        logicEl.innerText = "Trade completed. Waiting new setup.";
+
+        // reset
+        tradeActive = false;
+        impulseHigh = null;
+        impulseLow = null;
+        direction = null;
+      }
+    }
+
+    if (!tradeActive) {
+      statusEl.innerText = "WAITING";
+      statusEl.className = "badge waiting";
+      logicEl.innerText = "Waiting aggressive move → Fib 0.5";
+    }
+
+    lastPrice = price;
+  };
 }
 
-// Update every 2 sec
-setInterval(updateMarket, 2000);
+// INIT
+createEngine(
+  "btcusdt",
+  document.getElementById("btcPrice"),
+  document.getElementById("btcStatus"),
+  document.getElementById("btcLogic")
+);
+
+createEngine(
+  "ethusdt",
+  document.getElementById("ethPrice"),
+  document.getElementById("ethStatus"),
+  document.getElementById("ethLogic")
+);
 </script>
 
 </body>
