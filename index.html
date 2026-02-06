@@ -1,106 +1,94 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-  <meta charset="UTF-8" />
-  <title>TS ACADEMY AI</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      background: #f4f6f8;
-      margin: 0;
-      padding: 20px;
-    }
-    h1 {
-      text-align: center;
-      margin-bottom: 30px;
-    }
-    .card {
-      background: #fff;
-      padding: 16px;
-      margin-bottom: 15px;
-      border-radius: 12px;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.08);
-    }
-    .row {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-    .buy { color: green; font-weight: bold; }
-    .sell { color: red; font-weight: bold; }
-    .wait { color: orange; font-weight: bold; }
-  </style>
+<meta charset="UTF-8">
+<title>TS ACADEMY AI</title>
+
+<style>
+body{
+  margin:0;
+  background:#e9eef3;
+  font-family:Arial;
+}
+.header{
+  position:fixed;
+  right:20px;
+  top:20px;
+  font-weight:bold;
+  letter-spacing:2px;
+}
+.container{
+  display:grid;
+  grid-template-columns: 1fr 1fr;
+  height:100vh;
+}
+.panel{
+  padding:40px;
+  border-right:1px solid #ccc;
+}
+.panel:last-child{border-right:none}
+.symbol{
+  font-size:22px;
+  font-weight:bold;
+}
+.price{
+  font-size:26px;
+  margin:20px 0;
+}
+.status{
+  font-size:20px;
+  font-weight:bold;
+}
+.buy{color:green}
+.sell{color:red}
+.wait{color:orange}
+</style>
 </head>
+
 <body>
 
-<h1>TS ACADEMY AI</h1>
+<div class="header">TS ACADEMY AI</div>
 
-<div class="card">
-  <div class="row">
-    <h2>BTCUSDT</h2>
-    <span id="btcStatus" class="wait">WAITING</span>
-  </div>
-  <p>Price: <span id="btcPrice">--</span></p>
-</div>
+<div class="container">
 
-<div class="card">
-  <div class="row">
-    <h2>ETHUSDT</h2>
-    <span id="ethStatus" class="wait">WAITING</span>
+  <div class="panel">
+    <div class="symbol">ETHUSDT</div>
+    <div class="price" id="ethPrice">--</div>
+    <div class="status wait" id="ethStatus">WAITING</div>
   </div>
-  <p>Price: <span id="ethPrice">--</span></p>
+
+  <div class="panel">
+    <div class="symbol">BTCUSDT</div>
+    <div class="price" id="btcPrice">--</div>
+    <div class="status wait" id="btcStatus">WAITING</div>
+  </div>
+
 </div>
 
 <script>
-  function fibSignal(price, high, low) {
-    const fib05 = low + (high - low) * 0.5;
-    const aggressive = (high - low) / low > 0.01; // 1% move
+function fibSignal(price, high, low){
+  let fib05 = low + (high-low)*0.5;
+  let aggressive = (high-low)/low > 0.01;
+  if(!aggressive) return "WAITING";
+  return price > fib05 ? "BUY" : "SELL";
+}
+function cls(s){return s=="BUY"?"buy":s=="SELL"?"sell":"wait"}
 
-    if (!aggressive) return "WAITING";
-    if (price > fib05) return "BUY";
-    if (price < fib05) return "SELL";
-    return "WAITING";
-  }
-
-  function statusClass(status) {
-    if (status === "BUY") return "buy";
-    if (status === "SELL") return "sell";
-    return "wait";
-  }
-
-  function connect(symbol, priceEl, statusEl, high, low) {
-    const ws = new WebSocket(
-      wss://stream.binance.com:9443/ws/${symbol.toLowerCase()}@trade
-    );
-
-    ws.onmessage = (e) => {
-      const data = JSON.parse(e.data);
-      const price = parseFloat(data.p);
-
-      priceEl.innerText = price.toFixed(2);
-
-      const status = fibSignal(price, high, low);
-      statusEl.innerText = status;
-      statusEl.className = statusClass(status);
-    };
-  }
-
-  // TEMP fixed range (next step e dynamic hobe)
-  connect(
-    "BTCUSDT",
-    document.getElementById("btcPrice"),
-    document.getElementById("btcStatus"),
-    70000,
-    65000
+function ws(symbol, priceEl, statusEl, high, low){
+  let socket = new WebSocket(
+    "wss://stream.binance.com:9443/ws/"+symbol.toLowerCase()+"@trade"
   );
+  socket.onmessage = e =>{
+    let p = parseFloat(JSON.parse(e.data).p);
+    priceEl.innerText = p.toFixed(2);
+    let s = fibSignal(p,high,low);
+    statusEl.innerText = s;
+    statusEl.className = "status "+cls(s);
+  }
+}
 
-  connect(
-    "ETHUSDT",
-    document.getElementById("ethPrice"),
-    document.getElementById("ethStatus"),
-    4000,
-    3500
-  );
+ws("ETHUSDT",ethPrice,ethStatus,4000,3500);
+ws("BTCUSDT",btcPrice,btcStatus,70000,65000);
 </script>
 
 </body>
