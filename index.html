@@ -1,8 +1,9 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Step 2 - Basic Layout</title>
+    <title>Step 3 - JavaScript Interaction</title>
 
     <style>
         * {
@@ -47,33 +48,60 @@
             text-decoration: none;
             font-weight: bold;
             border-radius: 6px;
+            cursor: pointer;
+            border: none;
         }
 
         .btn:hover {
             background: #16a34a;
         }
+
+        .status {
+            margin-top: 15px;
+            font-weight: bold;
+            color: #38bdf8;
+        }
     </style>
 </head>
 <body>
 
-    <header>
-        My Trading Dashboard
-    </header>
+<header>
+    My Trading Dashboard
+</header>
 
-    <div class="container">
+<div class="container">
+    <div class="card">
+        <h2>System Status</h2>
+        <p id="info">
+            Bot is currently OFF
+        </p>
 
-        <div class="card">
-            <h2>Welcome</h2>
-            <p>
-                This is Step 2.  
-                Basic layout + styling is done.  
-                No JS, no backend, just structure.
-            </p>
+        <button class="btn" onclick="toggleBot()">Toggle Bot</button>
 
-            <a href="#" class="btn">Continue</a>
-        </div>
-
+        <div class="status" id="statusText"></div>
     </div>
+</div>
+
+<script>
+    let botOn = false;
+
+    function toggleBot() {
+        botOn = !botOn;
+
+        const info = document.getElementById("info");
+        const status = document.getElementById("statusText");
+
+        if (botOn) {
+            info.textContent = "Bot is currently ON";
+            status.textContent = "Status: Running analysis...";
+            status.style.color = "#22c55e";
+        } else {
+            info.textContent = "Bot is currently OFF";
+            status.textContent = "Status: Stopped";
+            status.style.color = "#ef4444";
+        }
+    }
+</script>
 
 </body>
-</html>>
+</html>
